@@ -107,11 +107,6 @@ export async function rollDamage({event, spellLevel=null, versatile=false, optio
   const actorData = this.actor.data.data;
   const messageData = {"flags.dnd5e.roll": {type: "damage", itemId: this.id }};
 
-  const button = event.currentTarget;
-  const card = button.closest(".chat-card");
-  const messageId = card.closest(".message").dataset.messageId;
-  const message =  game.messages.get(messageId);
-
   // Get roll data
   const parts = itemData.damage.parts.map(d => d[0]);
   const rollData = this.getRollData();
@@ -196,6 +191,13 @@ export async function rollDamage({event, spellLevel=null, versatile=false, optio
     game.dice3d.showForRoll(damageRoll);
   }
 
+  // Get messageId
+  const button = event.currentTarget;
+  const card = button.closest(".chat-card");
+  const messageId = card.closest(".message").dataset.messageId;
+  const message =  game.messages.get(messageId);
+
+  // Replace button with roll
   const content = duplicate(message.data.content);
   const damageRegex = /<button data-action="damage">[^<]*<\/button>/;
   const versatileRegex = /<button data-action="versatile">[^<]*<\/button>/;
