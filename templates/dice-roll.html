@@ -1,0 +1,23 @@
+<div class="dice-roll">
+  <div class="dice-result">
+    <div class="dice-formula">{{rollFormula}}</div>
+    <div class="dice-tooltip">
+      {{#each rollParts}}
+        <section class="tooltip-part">
+          <div class="dice">
+            <header class="part-header flexrow">
+              <span class="part-formula">{{this.formula}}</span>
+              <span class="part-total">{{this.total}}</span>
+            </header>
+            <ol class="dice-rolls">
+              {{#each rolls}}
+                <li class="roll die d{{../dice}}">{{this.roll}}</li>
+              {{/each}}
+            </ol>
+          </div>
+        </section>
+      {{/each}}
+    </div>
+    <h4 class="dice-total">{{rollTotal}}</h4>
+  </div>
+</div>
