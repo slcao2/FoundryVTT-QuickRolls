@@ -13,11 +13,7 @@
     </div>
 
     <div class="card-buttons quick-rolls-card-buttons">
-        <h4 class="quick-rolls-card-button-header">{{ localize "DND5E.Attack" }}</h4>
-        <div class="flexrow">
-            {{> diceRoll attackRoll}}
-            {{> diceRoll advDisRoll}}
-        </div>
+        {{#if hasAttack}}<button data-action="attack">{{ localize "DND5E.Attack" }}</button>{{/if}}
         
         {{#if hasDamage}}
         <button data-action="damage">
