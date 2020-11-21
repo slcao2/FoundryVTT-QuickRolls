@@ -10,11 +10,9 @@
   "readme": "./README.md",
   "esmodules" : [
     "./scripts/main.js",
-    "./scripts/chat.js",
     "./scripts/overrides.js",
     "./scripts/settings.js",
-    "./scripts/utils/logger.js",
-    "./scripts/utils/roll.js"
+    "./scripts/utils/logger.js"
   ],
   "styles": [
     "./styles/quick-rolls.css"
