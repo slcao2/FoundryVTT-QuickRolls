@@ -12,10 +12,20 @@
         {{/if}}
     </div>
 
-    <div class="card-buttons quick-rolls-card-buttons">
-        {{#if hasAttack}}<button data-action="attack">{{ localize "DND5E.Attack" }}</button>{{/if}}
+    <div class="card-buttons qr-card-buttons">
+        {{#if hasAttack}}
+        <div class="flexrow">
+            <h4 class="qr-card-button-header qr-attack qr-hidden">{{ localize "DND5E.Attack" }}</h4>
+            <h4 class="qr-card-button-header qr-vantage qr-hidden">{{ localize "QR.Vantage" }}</h4>
+        </div>
+        <div class="flexrow">
+            <button data-action="attack">{{ localize "DND5E.Attack" }}</button>
+            <button data-action="vantage">{{ localize "QR.Vantage" }}</button>
+        </div>
+        {{/if}}
         
         {{#if hasDamage}}
+        <h4 class="qr-card-button-header qr-damage qr-hidden">{{ localize "DND5E.Damage" }}</h4>
         <button data-action="damage">
             {{#if isHealing}}{{ localize "DND5E.Healing" }}
             {{else}}{{localize "DND5E.Damage" }}{{/if}}
@@ -23,6 +33,7 @@
         {{/if}}
 
         {{#if isVersatile}}
+        <h4 class="qr-card-button-header qr-versatile qr-hidden">{{ localize "DND5E.Versatile" }}</h4>
         <button data-action="versatile">{{ localize "DND5E.Versatile" }}</button>
         {{/if}}
 
@@ -33,6 +44,7 @@
         {{/if}}
 
         {{#if data.formula}}
+        <h4 class="qr-card-button-header qr-formula qr-hidden">{{ localize "DND5E.OtherFormula" }}</h4>
         <button data-action="formula">{{ localize "DND5E.OtherFormula"}}</button>
         {{/if}}
 

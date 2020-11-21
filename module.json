@@ -18,5 +18,10 @@
   ],
   "styles": [
     "./styles/quick-rolls.css"
-  ]
+  ],
+  "languages": [{
+    "lang": "en",
+    "name": "English",
+    "path": "lang/en.json"
+  }]
 }

@@ -7,7 +7,7 @@ import { debug } from "./utils/logger.js";
  * @param {object} options        Roll options which are configured and provided to the d20Roll function
  * @return {Promise<Roll|null>}   A Promise which resolves to the created Roll instance
  */
-async function rollAttack(options={}) {
+async function rollAttack({event, message, vantage=false}={}) {
   const itemData = this.data.data;
   const actorData = this.actor.data.data;
   const flags = this.actor.data.flags.dnd5e || {};
@@ -46,9 +46,6 @@ async function rollAttack(options={}) {
     }
   }
 
-  // Compose roll options
-  const event = options.event;
-
   // Expanded critical hit thresholds
   let critical = 20;
   if (( this.data.type === "weapon" ) && flags.weaponCriticalThreshold) {
@@ -80,6 +77,9 @@ async function rollAttack(options={}) {
 
   // Handle fast-forward events
   let adv = 0;
+  if (vantage) {
+    adv = event.ctrlKey || event.metaKey ? -1 : 1;
+  }
 
   // Define the inner roll function
   const _roll = (parts, adv, form) => {
@@ -89,15 +89,9 @@ async function rollAttack(options={}) {
     let mods = halflingLucky ? "r=1" : "";
 
     // Handle advantage
-    if (adv === 1) {
-      nd = elvenAccuracy ? 3 : 2;
-      mods += "kh";
-    }
-
-    // Handle disadvantage
-    else if (adv === -1) {
+    if (adv === 1 && elvenAccuracy) {
       nd = 2;
-      mods += "kl";
+      mods += "kh"
     }
 
     // Prepend the d20 roll
@@ -151,32 +145,25 @@ async function rollAttack(options={}) {
   if ( attackRoll === false ) return null;
 
   // Handle resource consumption if the attack roll was made
-  const allowed = await this._handleResourceConsumption({isCard: false, isAttack: true});
-  if ( allowed === false ) return null;
-
-  if (game.dice3d) {
-    game.dice3d.showForRoll(attackRoll);
-  }
-
-  // Get messageId
-  let message = options.message;
-  if (!message) {
-    const button = event.currentTarget;
-    const card = button.closest(".chat-card");
-    const messageId = card.closest(".message").dataset.messageId;
-    message =  game.messages.get(messageId);
+  if (!vantage) {
+    const allowed = await this._handleResourceConsumption({isCard: false, isAttack: true});
+    if ( allowed === false ) return null;
   }
 
   // Replace button with roll
-  const content = duplicate(message.data.content);
-  const attackRegex = /<button data-action="attack">[^<]*<\/button>/;
+  let headerKey = "DND5E.Attack";
+  let headerRegex = /<h4 class="qr-card-button-header qr-attack qr-hidden">[^<]*<\/h4>/;
+  let buttonRegex = /<button data-action="attack">[^<]*<\/button>/;
+  let action = "attack";
 
-  const attackRollHtml = await attackRoll.render();
-  const headerString = game.i18n.localize("DND5E.Attack");
-  const updateString = `<h4 class="quick-rolls-card-button-header">${headerString}</h4>${attackRollHtml}`;
+  if (vantage) {
+    headerKey = adv === -1 ? "QR.Disadvantage" : "QR.Advantage";
+    headerRegex = /<h4 class="qr-card-button-header qr-vantage qr-hidden">[^<]*<\/h4>/;
+    buttonRegex = /<button data-action="vantage">[^<]*<\/button>/;
+    action = "vantage";
+  }
 
-  const replacedContent = content.replace(attackRegex, updateString);
-  message.update({ content: replacedContent });
+  this.replaceButton({ headerKey, buttonRegex, headerRegex , message, roll: attackRoll, action });
 
   return attackRoll;
 }
@@ -271,7 +258,8 @@ async function rollItem({configureDialog=true, rollMode=null, createMessage=true
  * @param {object} [options]      Additional options passed to the damageRoll function
  * @return {Promise<Roll>}        A Promise which resolves to the created Roll instance
  */
-async function rollDamage({event, spellLevel=null, versatile=false, options={}}={}) {
+async function rollDamage({event, spellLevel=null, versatile=false, message}={}) {
+  debug("event", event);
   if ( !this.hasDamage ) throw new Error("You may not make a Damage Roll with this Item.");
   const itemData = this.data.data;
   const actorData = this.actor.data.data;
@@ -356,39 +344,162 @@ async function rollDamage({event, spellLevel=null, versatile=false, options={}}=
   // Create the Roll instance
   const damageRoll = _roll.bind(this)(parts, critical || event.altKey);
 
-  if (game.dice3d) {
-    game.dice3d.showForRoll(damageRoll);
-  }
-
-  // Get messageId
-  const button = event.currentTarget;
-  const card = button.closest(".chat-card");
-  const messageId = card.closest(".message").dataset.messageId;
-  const message =  game.messages.get(messageId);
-
   // Replace button with roll
-  const content = duplicate(message.data.content);
-  const damageRegex = /<button data-action="damage">[^<]*<\/button>/;
-  const versatileRegex = /<button data-action="versatile">[^<]*<\/button>/;
-
-  const damageRollHtml = await damageRoll.render();
-  let headerString = game.i18n.localize("DND5E.Damage");
+  let headerKey = "DND5E.Damage";
   if (versatile) {
-    headerString = game.i18n.localize("DND5E.Versatile");
+    headerKey = "DND5E.Versatile";
   } else if (this.isHealing) {
-    headerString = game.i18n.localize("DND5E.Healing");
+    headerKey = "DND5E.Healing";
   }
-  const updateString = `<h4 class="quick-rolls-card-button-header">${headerString}</h4>${damageRollHtml}`;
-  const replaceRegex = versatile ? versatileRegex : damageRegex;
+  const headerRegex = versatile ? /<h4 class="qr-card-button-header qr-versatile qr-hidden">[^<]*<\/h4>/ : /<h4 class="qr-card-button-header qr-damage qr-hidden">[^<]*<\/h4>/;
+  const buttonRegex = versatile ? /<button data-action="versatile">[^<]*<\/button>/ : /<button data-action="damage">[^<]*<\/button>/;
+  const action = versatile ? "versatile" : "damage";
 
-  const replacedContent = content.replace(replaceRegex, updateString);
-  message.update({ content: replacedContent });
+  this.replaceButton({ headerKey, headerRegex, buttonRegex, message, roll: damageRoll, action });
 
   return damageRoll;
 }
 
+/**
+ * Place an attack roll using an item (weapon, feat, spell, or equipment)
+ * Rely upon the d20Roll logic for the core implementation
+ *
+ * @return {Promise<Roll>}   A Promise which resolves to the created Roll instance
+ */
+async function rollFormula({event, spellLevel, message}) {
+  if ( !this.data.data.formula ) {
+    throw new Error("This Item does not have a formula to roll!");
+  }
+
+  // Define Roll Data
+  const rollData = this.getRollData();
+  if ( spellLevel ) rollData.item.level = spellLevel;
+
+  // Invoke the roll and submit it to chat
+  const roll = new Roll(rollData.item.formula, rollData).roll();
+
+  // Replace button with roll
+  const headerKey = "DND5E.OtherFormula";
+  const headerRegex =/<h4 class="qr-card-button-header qr-formula qr-hidden">[^<]*<\/h4>/;
+  const buttonRegex = /<button data-action="formula">[^<]*<\/button>/;
+  const action = "formula";
+
+  this.replaceButton({ headerKey, headerRegex, buttonRegex, message, roll, action });
+
+  return roll;
+}
+
+function modifyRollHtml({ rollHtml, roll, action }) {
+  const html = $(rollHtml);
+  switch (action) {
+    case "attack":
+    case "vantage":
+      for (let d of roll.dice) {
+        for (let r of d.results) {
+          if (r.active && d.options.critical === r.result) {
+            html.find(".dice-total").addClass("critical");
+          } else if (r.active && d.options.fumble === r.result) {
+            html.find(".dice-total").addClass("fumble");
+          }
+        }
+      }
+      break;
+  }
+  return html.prop("outerHTML");
+}
+
+async function replaceButton({ headerKey, buttonRegex, headerRegex, message, roll, action }) {
+  debug("roll", roll);
+  // Show roll on screen if Dice So Nice enabled
+  if (game.dice3d) {
+    game.dice3d.showForRoll(roll);
+  }
+  
+  const content = duplicate(message.data.content);
+  const rollHtml = await roll.render();
+  debug("rollHtml", rollHtml);
+  const modifiedRollHtml = modifyRollHtml({ rollHtml, roll, action });
+  debug("modifiedRollHtml", modifiedRollHtml);
+  const updateHeader = `<h4 class="qr-card-button-header qr-${action}">${game.i18n.localize(headerKey)}</h4>`
+  const updateButton = `${modifiedRollHtml}`;
+
+  const updatedContent = content
+    .replace(headerRegex, updateHeader)
+    .replace(buttonRegex, updateButton);
+
+  message.update({ content: updatedContent })
+}
+
+/**
+ * Handle execution of a chat card action via a click event on one of the card buttons
+ * @param {Event} event       The originating click event
+ * @returns {Promise}         A promise which resolves once the handler workflow is complete
+ * @private
+ */
+async function _onChatCardAction(event) {
+  event.preventDefault();
+
+  // Extract card data
+  const button = event.currentTarget;
+  button.disabled = true;
+  const card = button.closest(".chat-card");
+  const messageId = card.closest(".message").dataset.messageId;
+  const message =  game.messages.get(messageId);
+  const action = button.dataset.action;
+
+  // Validate permission to proceed with the roll
+  const isTargetted = action === "save";
+  if ( !( isTargetted || game.user.isGM || message.isAuthor ) ) return;
+
+  // Recover the actor for the chat card
+  const actor = this._getChatCardActor(card);
+  if ( !actor ) return;
+
+  // Get the Item from stored flag data or by the item ID on the Actor
+  const storedData = message.getFlag("dnd5e", "itemData");
+  const item = storedData ? this.createOwned(storedData, actor) : actor.getOwnedItem(card.dataset.itemId);
+  if ( !item ) {
+    return ui.notifications.error(game.i18n.format("DND5E.ActionWarningNoItem", {item: card.dataset.itemId, name: actor.name}))
+  }
+  const spellLevel = parseInt(card.dataset.spellLevel) || null;
+
+  // Handle different actions
+  switch ( action ) {
+    case "attack":
+      await item.rollAttack({event, message}); break;
+    case "vantage":
+      await item.rollAttack({event, message, vantage: true}); break;
+    case "damage":
+      await item.rollDamage({event, spellLevel, message}); break;
+    case "versatile":
+      await item.rollDamage({event, spellLevel, versatile: true, message}); break;
+    case "formula":
+      await item.rollFormula({event, spellLevel, message}); break;
+    case "save":
+      const targets = this._getChatCardTargets(card);
+      for ( let token of targets ) {
+        const speaker = ChatMessage.getSpeaker({scene: canvas.scene, token: token});
+        await token.actor.rollAbilitySave(button.dataset.ability, { event, speaker });
+      }
+      break;
+    case "toolCheck":
+      await item.rollToolCheck({event}); break;
+    case "placeTemplate":
+      const template = AbilityTemplate.fromItem(item);
+      if ( template ) template.drawPreview();
+      break;
+  }
+
+  // Re-enable the button
+  button.disabled = false;
+}
+
+
 export const overrideRoller = () => {
+  CONFIG.Item.entityClass._onChatCardAction = _onChatCardAction;
+  CONFIG.Item.entityClass.prototype.replaceButton = replaceButton;
   CONFIG.Item.entityClass.prototype.roll = rollItem;
   CONFIG.Item.entityClass.prototype.rollAttack = rollAttack;
   CONFIG.Item.entityClass.prototype.rollDamage = rollDamage;
+  CONFIG.Item.entityClass.prototype.rollFormula = rollFormula;
 };

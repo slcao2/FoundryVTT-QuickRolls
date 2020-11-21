@@ -1,20 +1,12 @@
-.quick-roll-double-button {
-
-}
-
-.quick-roll-left-button {
-  flex: 1;
-}
-
-.quick-roll-right-button {
-  flex: 1;
-}
-
-.quick-rolls-card-buttons {
+.qr-card-buttons {
   border-top: 2px groove #FFF;
 }
 
-.quick-rolls-card-button-header {
+.qr-card-button-header {
   margin: 0;
   text-align: center;
+}
+
+.qr-hidden {
+  display: none;
 }
