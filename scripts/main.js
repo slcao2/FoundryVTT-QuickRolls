@@ -22,16 +22,9 @@ const preloadTemplates = () => {
 	return loadTemplates(templatePaths);
 };
 
-const registerPartials = async () => {
-  Handlebars.registerPartial("diceRoll", await $.get(`${TEMPLATE_PATH_PREFIX}/dice-roll.html`, (data) => {
-    debug("load html", data);
-  }));
-};
-
 Hooks.on("init", () => {
   registerSettings();
   preloadTemplates();
-  registerPartials();
 });
 
 Hooks.on("setup", () => {
