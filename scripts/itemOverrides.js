@@ -79,6 +79,7 @@ async function rollAttack({event, message, vantage=false}={}) {
   let adv = 0;
   if (vantage) {
     adv = event.ctrlKey || event.metaKey ? -1 : 1;
+    message.isAdvantage = adv > 0;
   }
 
   // Define the inner roll function
@@ -148,17 +149,20 @@ async function rollAttack({event, message, vantage=false}={}) {
   if (!vantage) {
     const allowed = await this._handleResourceConsumption({isCard: false, isAttack: true});
     if ( allowed === false ) return null;
+    message.attackRollTotal = attackRoll.total;
+  } else {
+    message.vantageRollTotal = attackRoll.total;
   }
 
   // Replace button with roll
   let headerKey = "DND5E.Attack";
-  let headerRegex = /<h4 class="qr-card-button-header qr-attack qr-hidden">[^<]*<\/h4>/;
+  let headerRegex = /<h4 class="qr-card-button-header qr-attack-header qr-hidden">[^<]*<\/h4>/;
   let buttonRegex = /<button data-action="attack">[^<]*<\/button>/;
   let action = "attack";
 
   if (vantage) {
     headerKey = adv === -1 ? "QR.Disadvantage" : "QR.Advantage";
-    headerRegex = /<h4 class="qr-card-button-header qr-vantage qr-hidden">[^<]*<\/h4>/;
+    headerRegex = /<h4 class="qr-card-button-header qr-vantage-header qr-hidden">[^<]*<\/h4>/;
     buttonRegex = /<button data-action="vantage">[^<]*<\/button>/;
     action = "vantage";
   }
@@ -352,7 +356,7 @@ async function rollDamage({event, spellLevel=null, versatile=false, message}={})
   } else if (this.isHealing) {
     headerKey = "DND5E.Healing";
   }
-  const headerRegex = versatile ? /<h4 class="qr-card-button-header qr-versatile qr-hidden">[^<]*<\/h4>/ : /<h4 class="qr-card-button-header qr-damage qr-hidden">[^<]*<\/h4>/;
+  const headerRegex = versatile ? /<h4 class="qr-card-button-header qr-versatile-header qr-hidden">[^<]*<\/h4>/ : /<h4 class="qr-card-button-header qr-damage-header qr-hidden">[^<]*<\/h4>/;
   const buttonRegex = versatile ? /<button data-action="versatile">[^<]*<\/button>/ : /<button data-action="damage">[^<]*<\/button>/;
   const action = versatile ? "versatile" : "damage";
 
@@ -381,7 +385,7 @@ async function rollFormula({event, spellLevel, message}) {
 
   // Replace button with roll
   const headerKey = "DND5E.OtherFormula";
-  const headerRegex =/<h4 class="qr-card-button-header qr-formula qr-hidden">[^<]*<\/h4>/;
+  const headerRegex =/<h4 class="qr-card-button-header qr-formula-header qr-hidden">[^<]*<\/h4>/;
   const buttonRegex = /<button data-action="formula">[^<]*<\/button>/;
   const action = "formula";
 
@@ -394,6 +398,16 @@ function modifyRollHtml({ rollHtml, roll, action }) {
   const html = $(rollHtml);
   switch (action) {
     case "attack":
+      for (let d of roll.dice) {
+        for (let r of d.results) {
+          if (r.active && d.options.critical === r.result) {
+            html.find(".dice-total").addClass("critical");
+          } else if (r.active && d.options.fumble === r.result) {
+            html.find(".dice-total").addClass("fumble");
+          }
+        }
+      }
+      break;
     case "vantage":
       for (let d of roll.dice) {
         for (let r of d.results) {
@@ -406,6 +420,34 @@ function modifyRollHtml({ rollHtml, roll, action }) {
       }
       break;
   }
+  html.first().addClass(`qr-${action}`);
+  return html.prop("outerHTML");
+}
+
+function modifyChatHtml({ chatHtml, message, action }) {
+  const html = $(chatHtml);
+
+  switch (action) {
+    case "vantage":
+      debug("isAdv", message.isAdvantage);
+      debug("attackRollTotal", message.attackRollTotal);
+      debug("vantageRollTotal", message.vantageRollTotal);
+      if (message.isAdvantage) {
+        if (message.attackRollTotal > message.vantageRollTotal) {
+          html.find(".qr-vantage").addClass("qr-discarded");
+        } else {
+          html.find(".qr-attack").addClass("qr-discarded");
+        }
+      } else {
+        if (message.attackRollTotal < message.vantageRollTotal) {
+          html.find(".qr-vantage").addClass("qr-discarded");
+        } else {
+          html.find(".qr-attack").addClass("qr-discarded");
+        }
+      }
+      break;
+  }
+
   return html.prop("outerHTML");
 }
 
@@ -419,16 +461,17 @@ async function replaceButton({ headerKey, buttonRegex, headerRegex, message, rol
   const content = duplicate(message.data.content);
   const rollHtml = await roll.render();
   debug("rollHtml", rollHtml);
-  const modifiedRollHtml = modifyRollHtml({ rollHtml, roll, action });
+  const modifiedRollHtml = modifyRollHtml({ rollHtml, roll, action, message });
   debug("modifiedRollHtml", modifiedRollHtml);
-  const updateHeader = `<h4 class="qr-card-button-header qr-${action}">${game.i18n.localize(headerKey)}</h4>`
+  const updateHeader = `<h4 class="qr-card-button-header qr-${action}-header">${game.i18n.localize(headerKey)}</h4>`
   const updateButton = `${modifiedRollHtml}`;
 
   const updatedContent = content
     .replace(headerRegex, updateHeader)
     .replace(buttonRegex, updateButton);
+  const modifiedContent = modifyChatHtml({ chatHtml: updatedContent, message, action });
 
-  await message.update({ content: updatedContent })
+  await message.update({ content: modifiedContent })
 }
 
 /**

@@ -10,3 +10,7 @@
 .qr-hidden {
   display: none;
 }
+
+.qr-discarded {
+  filter: sepia(0.5) contrast(0.75) opacity(0.75);
+}
