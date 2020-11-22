@@ -163,7 +163,7 @@ async function rollAttack({event, message, vantage=false}={}) {
     action = "vantage";
   }
 
-  this.replaceButton({ headerKey, buttonRegex, headerRegex , message, roll: attackRoll, action });
+  await this.replaceButton({ headerKey, buttonRegex, headerRegex , message, roll: attackRoll, action });
 
   return attackRoll;
 }
@@ -176,9 +176,7 @@ async function rollAttack({event, message, vantage=false}={}) {
  *                                        the prepared chat message data (if false).
  * @return {Promise}
  */
-async function rollItem({configureDialog=true, rollMode=null, createMessage=true}={}) {
-  debug("this", this);
-
+async function rollItem({configureDialog=true, rollMode=null, createMessage=true, event}={}) {
   // Basic template rendering data
   const token = this.actor.token;
   const templateData = {
@@ -243,7 +241,10 @@ async function rollItem({configureDialog=true, rollMode=null, createMessage=true
     const message = await ChatMessage.create(chatData);
     
     if (this.hasAttack) {
-      this.rollAttack.bind(this)({ message })
+      await this.rollAttack.bind(this)({ event, message });
+      if (event.altKey || event.ctrlKey || event.metaKey) {
+        this.rollAttack.bind(this)({ event, message, vantage: true});
+      }
     }
     return message;
   } else return chatData;
@@ -427,7 +428,7 @@ async function replaceButton({ headerKey, buttonRegex, headerRegex, message, rol
     .replace(headerRegex, updateHeader)
     .replace(buttonRegex, updateButton);
 
-  message.update({ content: updatedContent })
+  await message.update({ content: updatedContent })
 }
 
 /**
@@ -495,7 +496,7 @@ async function _onChatCardAction(event) {
 }
 
 
-export const overrideRoller = () => {
+export const overrideItem = () => {
   CONFIG.Item.entityClass._onChatCardAction = _onChatCardAction;
   CONFIG.Item.entityClass.prototype.replaceButton = replaceButton;
   CONFIG.Item.entityClass.prototype.roll = rollItem;
