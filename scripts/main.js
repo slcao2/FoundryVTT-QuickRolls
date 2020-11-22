@@ -7,9 +7,9 @@ export const TEMPLATE_PATH_PREFIX = "modules/quick-rolls/templates";
 
 /*
 TODO
-Hijack the roll button on an item and replace it with an attack roll (roll 2 dice)
-Modify the chat card replacing the attack button with the roll result
-Modify the damage button on the chat card to roll damage without the prompt
+Hide Description on click
+Calculate Crits Automatically from Rolls
+Crit damage calc is wonky
 */
 
 CONFIG.debug.hooks = true;

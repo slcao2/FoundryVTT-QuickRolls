@@ -150,8 +150,26 @@ async function rollAttack({event, message, vantage=false}={}) {
     const allowed = await this._handleResourceConsumption({isCard: false, isAttack: true});
     if ( allowed === false ) return null;
     message.attackRollTotal = attackRoll.total;
+    for (let d of attackRoll.dice) {
+      for (let r of d.results) {
+        if (r.active && d.options.critical === r.result) {
+          message.isAttackCritical = true;
+        } else if (r.active && d.options.fumble === r.result) {
+          message.isAttackFumble = true;
+        }
+      }
+    }
   } else {
     message.vantageRollTotal = attackRoll.total;
+    for (let d of attackRoll.dice) {
+      for (let r of d.results) {
+        if (r.active && d.options.critical === r.result) {
+          message.isVantageCritical = true;
+        } else if (r.active && d.options.fumble === r.result) {
+          message.isVantageFumble = true;
+        }
+      }
+    }
   }
 
   // Replace button with roll
@@ -394,29 +412,21 @@ async function rollFormula({event, spellLevel, message}) {
   return roll;
 }
 
-function modifyRollHtml({ rollHtml, roll, action }) {
+function modifyRollHtml({ rollHtml, roll, action, message }) {
   const html = $(rollHtml);
   switch (action) {
     case "attack":
-      for (let d of roll.dice) {
-        for (let r of d.results) {
-          if (r.active && d.options.critical === r.result) {
-            html.find(".dice-total").addClass("critical");
-          } else if (r.active && d.options.fumble === r.result) {
-            html.find(".dice-total").addClass("fumble");
-          }
-        }
+      if (message.isAttackCritical) {
+        html.find(".dice-total").addClass("critical");
+      } else if (message.isAttackFumble) {
+        html.find(".dice-total").addClass("fumble");
       }
       break;
     case "vantage":
-      for (let d of roll.dice) {
-        for (let r of d.results) {
-          if (r.active && d.options.critical === r.result) {
-            html.find(".dice-total").addClass("critical");
-          } else if (r.active && d.options.fumble === r.result) {
-            html.find(".dice-total").addClass("fumble");
-          }
-        }
+      if (message.isVantageCritical) {
+        html.find(".dice-total").addClass("critical");
+      } else if (message.isVantageFumble) {
+        html.find(".dice-total").addClass("fumble");
       }
       break;
   }
@@ -428,22 +438,18 @@ function modifyChatHtml({ chatHtml, message, action }) {
   const html = $(chatHtml);
 
   switch (action) {
+    case "attack":
+      message.isCritical = message.isAttackCritical;
+      message.isFumble = message.isAttackFumble;
     case "vantage":
-      debug("isAdv", message.isAdvantage);
-      debug("attackRollTotal", message.attackRollTotal);
-      debug("vantageRollTotal", message.vantageRollTotal);
-      if (message.isAdvantage) {
-        if (message.attackRollTotal > message.vantageRollTotal) {
-          html.find(".qr-vantage").addClass("qr-discarded");
-        } else {
-          html.find(".qr-attack").addClass("qr-discarded");
-        }
-      } else {
-        if (message.attackRollTotal < message.vantageRollTotal) {
-          html.find(".qr-vantage").addClass("qr-discarded");
-        } else {
-          html.find(".qr-attack").addClass("qr-discarded");
-        }
+      if ((message.isAdvantage && message.attackRollTotal >= message.vantageRollTotal) || (!message.isAdvantage && message.attackRollTotal <= message.vantageRollTotal)) {
+        html.find(".qr-vantage").addClass("qr-discarded");
+        message.isCritical = message.isAttackCritical;
+        message.isFumble = message.isAttackFumble;
+      } else if ((message.isAdvantage && message.attackRollTotal < message.vantageRollTotal) || (!message.isAdvantage && message.attackRollTotal > message.vantageRollTotal)) {
+        html.find(".qr-attack").addClass("qr-discarded");
+        message.isCritical = message.isVantageCritical;
+        message.isFumble = message.isVantageFumble;
       }
       break;
   }
