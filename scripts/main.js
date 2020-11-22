@@ -1,7 +1,7 @@
 import { registerSettings } from './settings.js';
 import { debug } from './utils/logger.js';
 import { overrideItem } from './itemOverrides.js';
-import { overrideActor } from './actorOverrides.js';
+import { overrideActorSetup, overrideActor } from './actorOverrides.js';
 
 export const TEMPLATE_PATH_PREFIX = "modules/quick-rolls/templates";
 
@@ -30,6 +30,7 @@ Hooks.on("init", () => {
 
 Hooks.on("setup", () => {
   overrideItem();
+  overrideActorSetup();
 });
 
 Hooks.on("ready", () => {

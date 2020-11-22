@@ -10,9 +10,11 @@
   "readme": "./README.md",
   "esmodules" : [
     "./scripts/main.js",
-    "./scripts/overrides.js",
+    "./scripts/itemOverrides.js",
+    "./scripts/actorOverrides.js",
     "./scripts/settings.js",
-    "./scripts/utils/logger.js"
+    "./scripts/utils/logger.js",
+    "./scripts/ability-use-dialog.js"
   ],
   "styles": [
     "./styles/quick-rolls.css"
