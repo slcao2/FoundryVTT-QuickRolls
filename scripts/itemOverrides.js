@@ -273,7 +273,7 @@ async function rollItem({configureDialog=true, rollMode=null, createMessage=true
   } else return chatData;
 };
 
-function calculateCrit({ parts, rollData, roll }) {
+function calculateCrit({ parts, rollData, roll, criticalMultiplier, criticalBonusDice }) {
   const critType = game.settings.get(moduleName, SETTING_CRIT_CALCULATION);
   switch (critType) {
     case CRIT_CALCULATION_DEFAULT:
@@ -371,7 +371,7 @@ async function rollDamage({event, spellLevel=null, versatile=false, message}={})
     
     // Modify the damage formula for critical hits
     if (crit) {
-      roll = calculateCrit({ parts, rollData, roll });
+      roll = calculateCrit({ parts, rollData, roll, criticalMultiplier, criticalBonusDice });
     }
 
     // Execute the roll
@@ -384,7 +384,7 @@ async function rollDamage({event, spellLevel=null, versatile=false, message}={})
     }
   };
 
-  const critical = message.isCritical;
+  const critical = message.isCritical || event.altKey;
   // Create the Roll instance
   const damageRoll = _roll.bind(this)(parts, critical || event.altKey);
 
@@ -420,7 +420,10 @@ async function rollFormula({event, spellLevel, message}) {
   if ( spellLevel ) rollData.item.level = spellLevel;
 
   // Invoke the roll and submit it to chat
-  const roll = new Roll(rollData.item.formula, rollData).roll();
+  let roll = new Roll(rollData.item.formula, rollData).roll();
+  if (message.isCritical || event.altKey) {
+    roll = calculateCrit({ parts: [rollData.item.formula], rollData, roll, criticalMultiplier: 2, criticalBonusDice: 0 });
+  }
 
   // Replace button with roll
   const headerKey = "DND5E.OtherFormula";
