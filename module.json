@@ -14,7 +14,8 @@
     "./scripts/actorOverrides.js",
     "./scripts/settings.js",
     "./scripts/utils/logger.js",
-    "./scripts/ability-use-dialog.js"
+    "./scripts/ability-use-dialog.js",
+    "./scripts/utils/chat.js  "
   ],
   "styles": [
     "./styles/quick-rolls.css"
