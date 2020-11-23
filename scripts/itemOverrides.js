@@ -1,4 +1,5 @@
 import { debug } from "./utils/logger.js";
+import { moduleName, SETTING_CRIT_CALCULATION, CRIT_CALCULATION_DEFAULT, CRIT_CALCULATION_MAXCRITDICE } from "./settings.js";
 
 /**
  * Place an attack roll using an item (weapon, feat, spell, or equipment)
@@ -272,6 +273,33 @@ async function rollItem({configureDialog=true, rollMode=null, createMessage=true
   } else return chatData;
 };
 
+function calculateCrit({ parts, rollData, roll }) {
+  const critType = game.settings.get(moduleName, SETTING_CRIT_CALCULATION);
+  switch (critType) {
+    case CRIT_CALCULATION_DEFAULT:
+      roll.alter(criticalMultiplier, 0);      // Multiply all dice
+      if ( roll.terms[0] instanceof Die ) {   // Add bonus dice for only the main dice term
+        roll.terms[0].alter(1, criticalBonusDice);
+        roll._formula = roll.formula;
+      }
+      break;
+    case CRIT_CALCULATION_MAXCRITDICE:
+      parts.push("@crit");
+      rollData["crit"] = 0;
+      const dRegex = /[0-9]*d[0-9]+/;
+      parts.forEach(part => {
+        part.split("+").map(p => p.trim()).forEach(p => {
+          if (dRegex.test(p)) {
+            rollData["crit"] += p.split("d").reduce((acc, curr) => acc * curr, 1)
+          }
+        });
+      });
+      roll = new Roll(parts.join("+"), rollData);
+      break;
+  }
+  return roll;
+}
+
 /**
  * Place a damage roll using an item (weapon, feat, spell, or equipment)
  * Rely upon the damageRoll logic for the core implementation.
@@ -286,7 +314,6 @@ async function rollDamage({event, spellLevel=null, versatile=false, message}={})
   if ( !this.hasDamage ) throw new Error("You may not make a Damage Roll with this Item.");
   const itemData = this.data.data;
   const actorData = this.actor.data.data;
-  const messageData = {"flags.dnd5e.roll": {type: "damage", itemId: this.id }};
 
   // Get roll data
   const parts = itemData.damage.parts.map(d => d[0]);
@@ -296,7 +323,6 @@ async function rollDamage({event, spellLevel=null, versatile=false, message}={})
   // Adjust damage from versatile usage
   if ( versatile && itemData.damage.versatile ) {
     parts[0] = itemData.damage.versatile;
-    messageData["flags.dnd5e.roll"].versatile = true;
   }
 
   // Scale damage from up-casting spells
@@ -342,15 +368,10 @@ async function rollDamage({event, spellLevel=null, versatile=false, message}={})
 
     // Create the damage roll
     let roll = new Roll(parts.join("+"), rollData);
-
+    
     // Modify the damage formula for critical hits
-    if ( crit === true ) {
-      roll.alter(criticalMultiplier, 0);      // Multiply all dice
-      if ( roll.terms[0] instanceof Die ) {   // Add bonus dice for only the main dice term
-        roll.terms[0].alter(1, criticalBonusDice);
-        roll._formula = roll.formula;
-      }
-      if ( "flags.dnd5e.roll" in messageData ) messageData["flags.dnd5e.roll"].critical = true;
+    if (crit) {
+      roll = calculateCrit({ parts, rollData, roll });
     }
 
     // Execute the roll
@@ -363,7 +384,7 @@ async function rollDamage({event, spellLevel=null, versatile=false, message}={})
     }
   };
 
-  const critical = false;
+  const critical = message.isCritical;
   // Create the Roll instance
   const damageRoll = _roll.bind(this)(parts, critical || event.altKey);
 
@@ -466,9 +487,7 @@ async function replaceButton({ headerKey, buttonRegex, headerRegex, message, rol
   
   const content = duplicate(message.data.content);
   const rollHtml = await roll.render();
-  debug("rollHtml", rollHtml);
   const modifiedRollHtml = modifyRollHtml({ rollHtml, roll, action, message });
-  debug("modifiedRollHtml", modifiedRollHtml);
   const updateHeader = `<h4 class="qr-card-button-header qr-${action}-header">${game.i18n.localize(headerKey)}</h4>`
   const updateButton = `${modifiedRollHtml}`;
 

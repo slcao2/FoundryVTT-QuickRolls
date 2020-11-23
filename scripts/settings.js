@@ -1,23 +1,23 @@
 import { debug } from "./utils/logger.js";
 
-const moduleName = "quick-rolls";
+export const moduleName = "quick-rolls";
 const curryRegister = module => (key, data) => game.settings.register(module, key, data);
 const register = curryRegister(moduleName);
 
 // Module Settings
-const SETTING_CRIT_CALCULATION = "critCalculation";
-const SETTING_AUTO_ROLL_DAMAGE = "autoRollDamage";
+export const SETTING_CRIT_CALCULATION = "critCalculation";
+export const SETTING_AUTO_ROLL_DAMAGE = "autoRollDamage";
 
 // Setting Scope
 const SCOPE_WORLD = "world";
 const SCOPE_CLIENT = "client";
 
-const CRIT_CALCULATION_DEFAULT = "default";
-const CRIT_CALCULATION_MAXCRITDICE = "maxCritDice";
+export const CRIT_CALCULATION_DEFAULT = "default";
+export const CRIT_CALCULATION_MAXCRITDICE = "maxCritDice";
 
-const AUTO_ROLL_DAMAGE_NONE = "none";
-const AUTO_ROLL_DAMAGE_DM_ONLY = "dmOnly";
-const AUTO_ROLL_DAMAGE_ALL = "all";
+export const AUTO_ROLL_DAMAGE_NONE = "none";
+export const AUTO_ROLL_DAMAGE_DM_ONLY = "dmOnly";
+export const AUTO_ROLL_DAMAGE_ALL = "all";
 
 export const registerSettings = () => {
   register(SETTING_CRIT_CALCULATION, {
