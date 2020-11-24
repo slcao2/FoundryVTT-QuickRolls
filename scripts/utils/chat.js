@@ -27,6 +27,26 @@ export function calculateCrit({ parts, rollData, roll, criticalMultiplier, criti
   return roll;
 }
 
+export async function replaceButton({ headerKey, buttonRegex, headerRegex, message, roll, action }) {
+  // Show roll on screen if Dice So Nice enabled
+  if (game.dice3d) {
+    game.dice3d.showForRoll(roll);
+  }
+  
+  const content = duplicate(message.data.content);
+  const rollHtml = await roll.render();
+  const modifiedRollHtml = modifyRollHtml({ rollHtml, roll, action, message });
+  const updateHeader = `<h4 class="qr-card-button-header qr-${action}-header">${game.i18n.localize(headerKey)}</h4>`
+  const updateButton = `${modifiedRollHtml}`;
+
+  const updatedContent = content
+    .replace(headerRegex, updateHeader)
+    .replace(buttonRegex, updateButton);
+  const modifiedContent = modifyChatHtml({ chatHtml: updatedContent, message, action });
+
+  await message.update({ content: modifiedContent })
+}
+
 export function modifyChatHtml({ chatHtml, message, action }) {
   const html = $(chatHtml);
 

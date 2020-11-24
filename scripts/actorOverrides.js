@@ -1,4 +1,5 @@
 import AbilityUseDialog from "./ability-use-dialog.js";
+import { debug } from "./utils/logger.js";
 
 /**
  * Cast a Spell, consuming a spell slot of a certain level
@@ -16,6 +17,7 @@ async function useSpell(item, {configureDialog=true, event}={}) {
   let consumeSlot = `spell${lvl}`;
   let consumeUse = false;
   let placeTemplate = false;
+  const originalLevel = item.data.data.level;
 
   // Configure spell slot consumption and measured template placement from the form
   if ( configureDialog && (usesSlots || item.hasAreaTarget || limitedUses) ) {
@@ -65,7 +67,7 @@ async function useSpell(item, {configureDialog=true, event}={}) {
   }
 
   // Invoke the Item roll
-  return item.roll({ event });
+  return item.roll({ event, originalSpellLevel: originalLevel });
 }
 
 /**

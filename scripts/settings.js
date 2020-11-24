@@ -30,7 +30,7 @@ export const registerSettings = () => {
       [CRIT_CALCULATION_DEFAULT]: "Default", // Roll double the number of dice
       [CRIT_CALCULATION_MAXCRITDICE]: "Max Crit Dice", // Roll the normal damage dice and add the max for the crit dice
     },
-    default: CRIT_CALCULATION_DEFAULT,
+    default: CRIT_CALCULATION_MAXCRITDICE,
     onChange: value => {
       debug(SETTING_CRIT_CALCULATION, value);
     },

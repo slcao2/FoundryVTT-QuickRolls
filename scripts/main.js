@@ -8,8 +8,7 @@ export const TEMPLATE_PATH_PREFIX = "modules/quick-rolls/templates";
 /*
 TODO
 Hide Description on click
-Calculate Crits Automatically from Rolls
-Crit damage calc is wonky
+Implement Auto Roll Settings
 */
 
 CONFIG.debug.hooks = true;

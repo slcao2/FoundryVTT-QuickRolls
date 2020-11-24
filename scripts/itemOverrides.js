@@ -1,5 +1,7 @@
 import { debug } from "./utils/logger.js";
-import { calculateCrit, modifyChatHtml, modifyRollHtml } from "./utils/chat.js";
+import { calculateCrit, replaceButton, modifyChatHtml, modifyRollHtml } from "./utils/chat.js";
+import { moduleName, SETTING_AUTO_ROLL_DAMAGE, AUTO_ROLL_DAMAGE_NONE, AUTO_ROLL_DAMAGE_DM_ONLY, AUTO_ROLL_DAMAGE_ALL } from "./settings.js";
+import { ownedOnlyByGM } from "./utils/helpers.js";
 
 /**
  * Place an attack roll using an item (weapon, feat, spell, or equipment)
@@ -199,7 +201,7 @@ async function rollAttack({event, message, vantage=false}={}) {
  *                                        the prepared chat message data (if false).
  * @return {Promise}
  */
-async function rollItem({configureDialog=true, rollMode=null, createMessage=true, event}={}) {
+async function rollItem({configureDialog=true, rollMode=null, createMessage=true, event, originalSpellLevel=null}={}) {
   // Basic template rendering data
   const token = this.actor.token;
   const templateData = {
@@ -266,7 +268,25 @@ async function rollItem({configureDialog=true, rollMode=null, createMessage=true
     if (this.hasAttack) {
       await this.rollAttack.bind(this)({ event, message });
       if (event.altKey || event.ctrlKey || event.metaKey) {
-        this.rollAttack.bind(this)({ event, message, vantage: true});
+        await this.rollAttack.bind(this)({ event, message, vantage: true});
+      }
+    }
+
+    if (this.hasDamage) {
+      const autoRollDamage = game.settings.get(moduleName, SETTING_AUTO_ROLL_DAMAGE);
+      const spellLevel = $(message.data.content).data("spell-level") || null;
+      
+      switch (autoRollDamage) {
+        case AUTO_ROLL_DAMAGE_DM_ONLY:
+          if (ownedOnlyByGM(this.actor)) {
+            this.data.data.level = originalSpellLevel;
+            await this.rollDamage({ event, spellLevel, message });
+          }
+          break;
+        case AUTO_ROLL_DAMAGE_ALL:
+          this.data.data.level = originalSpellLevel;
+          await this.rollDamage({ event, spellLevel, message });
+          break;
       }
     }
     return message;
@@ -283,7 +303,6 @@ async function rollItem({configureDialog=true, rollMode=null, createMessage=true
  * @return {Promise<Roll>}        A Promise which resolves to the created Roll instance
  */
 async function rollDamage({event, spellLevel=null, versatile=false, message}={}) {
-  debug("event", event);
   if ( !this.hasDamage ) throw new Error("You may not make a Damage Roll with this Item.");
   const itemData = this.data.data;
   const actorData = this.actor.data.data;
@@ -407,27 +426,6 @@ async function rollFormula({event, spellLevel, message}) {
   this.replaceButton({ headerKey, headerRegex, buttonRegex, message, roll, action });
 
   return roll;
-}
-
-async function replaceButton({ headerKey, buttonRegex, headerRegex, message, roll, action }) {
-  debug("roll", roll);
-  // Show roll on screen if Dice So Nice enabled
-  if (game.dice3d) {
-    game.dice3d.showForRoll(roll);
-  }
-  
-  const content = duplicate(message.data.content);
-  const rollHtml = await roll.render();
-  const modifiedRollHtml = modifyRollHtml({ rollHtml, roll, action, message });
-  const updateHeader = `<h4 class="qr-card-button-header qr-${action}-header">${game.i18n.localize(headerKey)}</h4>`
-  const updateButton = `${modifiedRollHtml}`;
-
-  const updatedContent = content
-    .replace(headerRegex, updateHeader)
-    .replace(buttonRegex, updateButton);
-  const modifiedContent = modifyChatHtml({ chatHtml: updatedContent, message, action });
-
-  await message.update({ content: modifiedContent })
 }
 
 /**
