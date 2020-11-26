@@ -54,7 +54,7 @@ export async function replaceButton({ headerKey, buttonRegex, headerRegex, messa
     .replace(buttonRegex, updateButton);
   const modifiedContent = modifyChatHtml({ chatHtml: updatedContent, message, action });
 
-  await message.update({ content: modifiedContent })
+  await message.update({ content: modifiedContent });
 }
 
 export function modifyChatHtml({ chatHtml, message, action }) {
