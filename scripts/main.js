@@ -5,12 +5,6 @@ import { overrideActorSetup, overrideActor } from './actorOverrides.js';
 
 export const TEMPLATE_PATH_PREFIX = "modules/quick-rolls/templates";
 
-/*
-TODO
-Hide Description on click
-Implement Auto Roll Settings
-*/
-
 CONFIG.debug.hooks = true;
 debug("CONFIG", CONFIG);
 

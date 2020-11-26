@@ -1,5 +1,9 @@
 import { moduleName, SETTING_CRIT_CALCULATION, CRIT_CALCULATION_DEFAULT, CRIT_CALCULATION_MAXCRITDICE } from "../settings.js";
 
+const DICE_SO_NICE = "dice-so-nice";
+
+const DICE_SO_NICE_IMMEDIATELY_DISPLAY_CHAT_MESSAGES = "immediatelyDisplayChatMessages"
+
 export function calculateCrit({ parts, rollData, roll, criticalMultiplier, criticalBonusDice }) {
   const critType = game.settings.get(moduleName, SETTING_CRIT_CALCULATION);
   switch (critType) {
@@ -30,7 +34,13 @@ export function calculateCrit({ parts, rollData, roll, criticalMultiplier, criti
 export async function replaceButton({ headerKey, buttonRegex, headerRegex, message, roll, action }) {
   // Show roll on screen if Dice So Nice enabled
   if (game.dice3d) {
-    game.dice3d.showForRoll(roll);
+    const shouldImmediatelyDisplayChatMessage = game.settings.get(DICE_SO_NICE, DICE_SO_NICE_IMMEDIATELY_DISPLAY_CHAT_MESSAGES);
+    if (shouldImmediatelyDisplayChatMessage) {
+      game.dice3d.showForRoll(roll);
+    } else {
+      await game.dice3d.showForRoll(roll);
+    }
+    
   }
   
   const content = duplicate(message.data.content);
