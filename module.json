@@ -30,7 +30,6 @@
     "path": "lang/en.json"
   }],
   "manifest": "https://raw.githubusercontent.com/slcao2/FoundryVTT-QuickRolls/main/module.json",
-  "download": "",
-  "bugs": "https://github.com/slcao2/FoundryVTT-QuickRolls/issues",
-  "changelog": ""
+  "download": "https://github.com/slcao2/FoundryVTT-QuickRolls/archive/v1.0.0.zip",
+  "bugs": "https://github.com/slcao2/FoundryVTT-QuickRolls/issues"
 }
