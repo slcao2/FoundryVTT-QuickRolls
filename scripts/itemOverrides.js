@@ -18,7 +18,6 @@ import { DEFAULT_RADIX } from './utils/utilities.js';
  * @return {Promise<Roll|null>}       A Promise which resolves to the created Roll instance
  */
 async function rollAttack({ event, message, vantage = false } = {}) {
-  debug('message', message);
   const itemData = this.data.data;
   const actorData = this.actor.data.data;
   const flags = this.actor.data.flags.dnd5e || {};
