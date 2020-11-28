@@ -1,6 +1,6 @@
 {
   "name": "foundryvtt-quickrolls",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "A module for quicker rolling in FoundryVTT.",
   "main": "main.js",
   "scripts": {

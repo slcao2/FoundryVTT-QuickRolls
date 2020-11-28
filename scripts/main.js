@@ -1,12 +1,12 @@
 import { registerSettings } from './settings.js';
-import { debug } from './utils/logger.js';
+// import { debug } from './utils/logger.js';
 import { overrideItem } from './itemOverrides.js';
 import { overrideActorSetup, overrideActor } from './actorOverrides.js';
 
 export const TEMPLATE_PATH_PREFIX = 'modules/quick-rolls/templates';
 
-CONFIG.debug.hooks = true;
-debug('CONFIG', CONFIG);
+// CONFIG.debug.hooks = true;
+// debug('CONFIG', CONFIG);
 
 const preloadTemplates = () => {
   const templatePaths = [

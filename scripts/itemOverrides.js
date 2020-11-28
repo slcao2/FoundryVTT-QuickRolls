@@ -12,10 +12,13 @@ import { DEFAULT_RADIX } from './utils/utilities.js';
  * Place an attack roll using an item (weapon, feat, spell, or equipment)
  * Rely upon the d20Roll logic for the core implementation
  *
- * @param {object} options        Roll options which are configured and provided to the d20Roll function
- * @return {Promise<Roll|null>}   A Promise which resolves to the created Roll instance
+ * @param {MouseEvent} [event]        An event which triggered this roll, if any
+ * @param {ChatMessage} [message]     The chat message event associate with the roll
+ * @param {boolean} [vantage]         Whether the attack is being made with advantager or disadvantage
+ * @return {Promise<Roll|null>}       A Promise which resolves to the created Roll instance
  */
 async function rollAttack({ event, message, vantage = false } = {}) {
+  debug('message', message);
   const itemData = this.data.data;
   const actorData = this.actor.data.data;
   const flags = this.actor.data.flags.dnd5e || {};
@@ -203,6 +206,8 @@ async function rollAttack({ event, message, vantage = false } = {}) {
  * @param {string} [rollMode]             The roll display mode with which to display (or not) the card
  * @param {boolean} [createMessage]       Whether to automatically create a chat message (if true) or simply return
  *                                        the prepared chat message data (if false).
+ * @param {MouseEvent} [event]            An event which triggered this roll, if any
+ * @param {number} [originalSpellLevel]   The original spell level if the roll is a spell roll that is upcast
  * @return {Promise}
  */
 async function rollItem({
@@ -304,11 +309,11 @@ async function rollItem({
 /**
  * Place a damage roll using an item (weapon, feat, spell, or equipment)
  * Rely upon the damageRoll logic for the core implementation.
- * @param {MouseEvent} [event]    An event which triggered this roll, if any
- * @param {number} [spellLevel]   If the item is a spell, override the level for damage scaling
- * @param {boolean} [versatile]   If the item is a weapon, roll damage using the versatile formula
- * @param {object} [options]      Additional options passed to the damageRoll function
- * @return {Promise<Roll>}        A Promise which resolves to the created Roll instance
+ * @param {MouseEvent} [event]      An event which triggered this roll, if any
+ * @param {number} [spellLevel]     If the item is a spell, override the level for damage scaling
+ * @param {boolean} [versatile]     If the item is a weapon, roll damage using the versatile formula
+ * @param {ChatMessage} [message]   The chat message event associate with the roll
+ * @return {Promise<Roll>}          A Promise which resolves to the created Roll instance
  */
 async function rollDamage({
   event, spellLevel = null, versatile = false, message,
@@ -416,7 +421,10 @@ async function rollDamage({
  * Place an attack roll using an item (weapon, feat, spell, or equipment)
  * Rely upon the d20Roll logic for the core implementation
  *
- * @return {Promise<Roll>}   A Promise which resolves to the created Roll instance
+ * @param {MouseEvent} [event]    An event which triggered this roll, if any
+ * @param {number} [spellLevel]   Level of spell
+ * @param {ChatMessage} [message]     The chat message event associate with the roll
+ * @return {Promise<Roll>}        A Promise which resolves to the created Roll instance
  */
 async function rollFormula({ event, spellLevel, message }) {
   if (!this.data.data.formula) {
