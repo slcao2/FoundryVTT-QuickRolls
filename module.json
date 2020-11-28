@@ -18,7 +18,8 @@
     "./scripts/ability-use-dialog.js",
     "./scripts/utils/logger.js",
     "./scripts/utils/chat.js",
-    "./scripts/utils/helpers.js"
+    "./scripts/utils/helpers.js",
+    "./scripts/utils/utilities.js"
   ],
   "styles": [
     "./styles/quick-rolls.css"
