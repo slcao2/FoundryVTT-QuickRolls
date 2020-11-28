@@ -1,6 +1,24 @@
 # FoundryVTT-QuickRolls
 A module for quicker rolling in FoundryVTT. After using both BetterRolls5e and Midi-QOL, I found some things that I liked about both but were not at the time available in either so I create my own module to get the rolling experience I wanted. Feel free to submit any bugs you find or features you'd like to see and I'll try to address them but no guarantees on whether they will be addressed in a timely manner or at all.
 
+## Installation
+You can install this module in a couple different ways outlined below.
+
+### Install through FoundryVTT Add-on Modules Tab (Recommended)
+Not Approved Yet
+* Go to the Add-on Modules tab.
+* Click Install Module.
+* Search for QuickRolls and click install.
+
+### Direct URL Install
+* Go to the Add-on Modules tab.
+* Click Install Module.
+* Copy https://raw.githubusercontent.com/slcao2/FoundryVTT-QuickRolls/main/module.json into the Manifest URL and click install.
+
+### Manual
+* Clone and extract the repo into the `Data/modules/quick-rolls` folder.
+* You can either clone the repo or download a zip archive from the tags.
+
 ## Features
 ### In-Card Item Roll
 * Rolling an item from a character sheet will automatically do an attack roll if it has it.
