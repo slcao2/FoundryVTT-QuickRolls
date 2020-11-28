@@ -392,9 +392,9 @@ async function rollDamage({
     }
   };
 
-  const critical = message.isCritical || event.altKey;
+  const critical = (message.isCritical || event.altKey) && !event.ctrlKey;
   // Create the Roll instance
-  const damageRoll = _roll.bind(this)(parts, critical || event.altKey);
+  const damageRoll = _roll.bind(this)(parts, critical);
 
   // Replace button with roll
   let headerKey = 'DND5E.Damage';

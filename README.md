@@ -1,6 +1,26 @@
 # FoundryVTT-QuickRolls
 A module for quicker rolling in FoundryVTT. After using both BetterRolls5e and Midi-QOL, I found some things that I liked about both but were not at the time available in either so I create my own module to get the rolling experience I wanted. Feel free to submit any bugs you find or features you'd like to see and I'll try to address them but no guarantees on whether they will be addressed in a timely manner or at all.
 
+## Features
+### In-Card Item Roll
+* Rolling an item from a character sheet will automatically do an attack roll if it has it.
+* Buttons on the card will also be replaced when with the actual roll result as they are rolled for attack/damage/versatile/formula rolls.
+* Alt clicking the item roll will automatically roll the item with advantage. Similarly, ctrl clicking will automatically roll with disadvantage.
+* The (dis)advantage button will automatically roll with advantage if clicked. Ctrl clicking will roll with disadvantage.
+* Alt clicking will roll damage with critical damage.
+* Advantage/Disadvantage is highlighted properly on the card.
+
+### Automatic Crit Calculation
+* A setting can be enabled to roll either the default dnd5e critical calculation or roll with the crit die as the max amount.
+* If the attack roll is a critical, the damage will automatically be rolled as a critical. Ctrl clicking the damage button will do a normal attack instead of critical.
+
+### Automatic Damage Rolls
+* You can set the damage roll to automatically roll for no one, GM-only owned actors, or all actors.
+
+### Dice So Nice Integration
+* Rolls show the Dice So Nice animation as they are rolled.
+* The result will wait to be displayed on the card if the immediatelyDisplayChatMessages setting is false. 
+
 ## Compatabilities
 Anything that overrides the overriden functions in overrideItem, overrideActor, or overrideActorSetup will likely be incompatible.
 * [Dice So Nice](https://gitlab.com/riccisi/foundryvtt-dice-so-nice) - Compatible. It should roll properly and respect the immediatelyDisplayChatMessages setting.
