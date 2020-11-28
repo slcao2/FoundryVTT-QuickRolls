@@ -1,17 +1,17 @@
-import AbilityUseDialog from "./ability-use-dialog.js";
-import { debug } from "./utils/logger.js";
+import AbilityUseDialog from './ability-use-dialog.js';
+import { DEFAULT_RADIX } from './utils/utilities.js';
 
 /**
  * Cast a Spell, consuming a spell slot of a certain level
  * @param {Item5e} item   The spell being cast by the actor
  * @param {Event} event   The originating user interaction which triggered the cast
  */
-async function useSpell(item, {configureDialog=true, event}={}) {
-  if ( item.data.type !== "spell" ) throw new Error("Wrong Item type");
+async function useSpell(item, { configureDialog = true, event } = {}) {
+  if (item.data.type !== 'spell') throw new Error('Wrong Item type');
   const itemData = item.data.data;
 
   // Configure spellcasting data
-  let lvl = itemData.level;
+  const lvl = itemData.level;
   const usesSlots = (lvl > 0) && CONFIG.DND5E.spellUpcastModes.includes(itemData.preparation.mode);
   const limitedUses = !!itemData.uses.per;
   let consumeSlot = `spell${lvl}`;
@@ -20,50 +20,50 @@ async function useSpell(item, {configureDialog=true, event}={}) {
   const originalLevel = item.data.data.level;
 
   // Configure spell slot consumption and measured template placement from the form
-  if ( configureDialog && (usesSlots || item.hasAreaTarget || limitedUses) ) {
+  if (configureDialog && (usesSlots || item.hasAreaTarget || limitedUses)) {
     const usage = await AbilityUseDialog.create(item);
-    if ( usage === null ) return;
+    if (usage === null) return;
 
     // Determine consumption preferences
-    consumeSlot = Boolean(usage.get("consumeSlot"));
-    consumeUse = Boolean(usage.get("consumeUse"));
-    placeTemplate = Boolean(usage.get("placeTemplate"));
+    consumeSlot = Boolean(usage.get('consumeSlot'));
+    consumeUse = Boolean(usage.get('consumeUse'));
+    placeTemplate = Boolean(usage.get('placeTemplate'));
 
     // Determine the cast spell level
     const isPact = usage.get('level') === 'pact';
-    const lvl = isPact ? this.data.data.spells.pact.level : parseInt(usage.get("level"));
-    if ( lvl !== item.data.data.level ) {
-      const upcastData = mergeObject(item.data, {"data.level": lvl}, {inplace: false});
+    const _lvl = isPact ? this.data.data.spells.pact.level : parseInt(usage.get('level'), DEFAULT_RADIX);
+    if (_lvl !== item.data.data.level) {
+      const upcastData = mergeObject(item.data, { 'data.level': _lvl }, { inplace: false });
       item = item.constructor.createOwned(upcastData, this);
     }
 
     // Denote the spell slot being consumed
-    if ( consumeSlot ) consumeSlot = isPact ? "pact" : `spell${lvl}`;
+    if (consumeSlot) consumeSlot = isPact ? 'pact' : `spell${_lvl}`;
   }
 
   // Update Actor data
-  if ( usesSlots && consumeSlot && (lvl > 0) ) {
-    const slots = parseInt(this.data.data.spells[consumeSlot]?.value);
-    if ( slots === 0 || Number.isNaN(slots) ) {
-      return ui.notifications.error(game.i18n.localize("DND5E.SpellCastNoSlots"));
+  if (usesSlots && consumeSlot && (lvl > 0)) {
+    const slots = parseInt(this.data.data.spells[consumeSlot]?.value, DEFAULT_RADIX);
+    if (slots === 0 || Number.isNaN(slots)) {
+      return ui.notifications.error(game.i18n.localize('DND5E.SpellCastNoSlots'));
     }
     await this.update({
-      [`data.spells.${consumeSlot}.value`]: Math.max(slots - 1, 0)
+      [`data.spells.${consumeSlot}.value`]: Math.max(slots - 1, 0),
     });
   }
 
   // Update Item data
-  if ( limitedUses && consumeUse ) {
-    const uses = parseInt(itemData.uses.value || 0);
-    if ( uses <= 0 ) ui.notifications.warn(game.i18n.format("DND5E.ItemNoUses", {name: item.name}));
-    await item.update({"data.uses.value": Math.max(parseInt(item.data.data.uses.value || 0) - 1, 0)})
+  if (limitedUses && consumeUse) {
+    const uses = parseInt(itemData.uses.value || 0, DEFAULT_RADIX);
+    if (uses <= 0) ui.notifications.warn(game.i18n.format('DND5E.ItemNoUses', { name: item.name }));
+    await item.update({ 'data.uses.value': Math.max(parseInt(item.data.data.uses.value || 0, DEFAULT_RADIX) - 1, 0) });
   }
 
   // Initiate ability template placement workflow if selected
-  if ( placeTemplate && item.hasAreaTarget ) {
+  if (placeTemplate && item.hasAreaTarget) {
     const template = AbilityTemplate.fromItem(item);
-    if ( template ) template.drawPreview();
-    if ( this.sheet.rendered ) this.sheet.minimize();
+    if (template) template.drawPreview();
+    if (this.sheet.rendered) this.sheet.minimize();
   }
 
   // Invoke the Item roll
@@ -76,16 +76,16 @@ async function useSpell(item, {configureDialog=true, event}={}) {
  */
 function _onItemRoll(event) {
   event.preventDefault();
-  const itemId = event.currentTarget.closest(".item").dataset.itemId;
+  const { itemId } = event.currentTarget.closest('.item').dataset;
   const item = this.actor.getOwnedItem(itemId);
 
   // Roll spells through the actor
-  if ( item.data.type === "spell" ) {
-    return this.actor.useSpell(item, {configureDialog: !event.shiftKey, event});
+  if (item.data.type === 'spell') {
+    return this.actor.useSpell(item, { configureDialog: !event.shiftKey, event });
   }
 
   // Otherwise roll the Item directly
-  else return item.roll({ event });
+  return item.roll({ event });
 }
 
 export const overrideActorSetup = () => {
@@ -93,8 +93,7 @@ export const overrideActorSetup = () => {
 };
 
 export const overrideActor = () => {
-  Object.values(CONFIG.Actor.sheetClasses).forEach(type => 
-      Object.values(type).forEach(sheet => {
-        sheet.cls.prototype._onItemRoll = _onItemRoll;
-    }));
+  Object.values(CONFIG.Actor.sheetClasses).forEach((type) => Object.values(type).forEach((sheet) => {
+    sheet.cls.prototype._onItemRoll = _onItemRoll;
+  }));
 };

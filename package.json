@@ -1,0 +1,24 @@
+{
+  "name": "foundryvtt-quickrolls",
+  "version": "1.0.0",
+  "description": "A module for quicker rolling in FoundryVTT.",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/slcao2/FoundryVTT-QuickRolls.git"
+  },
+  "author": "Steven Cao",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/slcao2/FoundryVTT-QuickRolls/issues"
+  },
+  "homepage": "https://github.com/slcao2/FoundryVTT-QuickRolls#readme",
+  "devDependencies": {
+    "eslint": "^7.14.0",
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-plugin-import": "^2.22.1"
+  }
+}

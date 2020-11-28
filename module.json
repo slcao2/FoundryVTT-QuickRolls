@@ -3,8 +3,10 @@
   "title": "Quick Rolls",
   "description": "A module for quicker rolling in FoundryVTT.",
   "author": "Steven Cao",
-  "version": "0.0.1",
+  "version": "1.0.0",
+  "system": ["dnd5e"],
   "minimumCoreVersion": "0.7.5",
+  "compatibleCoreVersion": "0.7.7",
   "url": "https://github.com/slcao2/FoundryVTT-QuickRolls",
   "license": "./LICENSE",
   "readme": "./README.md",
@@ -25,5 +27,9 @@
     "lang": "en",
     "name": "English",
     "path": "lang/en.json"
-  }]
+  }],
+  "manifest": "https://raw.githubusercontent.com/slcao2/FoundryVTT-QuickRolls/main/module.json",
+  "download": "",
+  "bugs": "https://github.com/slcao2/FoundryVTT-QuickRolls/issues",
+  "changelog": ""
 }
