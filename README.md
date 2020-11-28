@@ -5,7 +5,6 @@ A module for quicker rolling in FoundryVTT. After using both BetterRolls5e and M
 You can install this module in a couple different ways outlined below.
 
 ### Install through FoundryVTT Add-on Modules Tab (Recommended)
-Not Approved Yet
 * Go to the Add-on Modules tab.
 * Click Install Module.
 * Search for QuickRolls and click install.
