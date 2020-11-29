@@ -1,11 +1,14 @@
-import { debug, error } from './utils/logger.js';
+import { error } from './utils/logger.js';
 import {
-  calculateCrit, replaceButton,
+  calculateCrit, replaceButton, toggleAllDisabledButtonState,
 } from './utils/chat.js';
 import {
-  moduleName, SETTING_AUTO_ROLL_DAMAGE, AUTO_ROLL_DAMAGE_DM_ONLY, AUTO_ROLL_DAMAGE_ALL,
+  moduleName, SETTING_AUTO_ROLL_DAMAGE,
+  AUTO_ROLL_DAMAGE_DM_ONLY, AUTO_ROLL_DAMAGE_ALL,
 } from './settings.js';
-import { TEMPLATE_PATH_PREFIX, ownedOnlyByGM } from './utils/helpers.js';
+import {
+  TEMPLATE_PATH_PREFIX, ownedOnlyByGM, hasVantageFromEvent,
+} from './utils/helpers.js';
 import { DEFAULT_RADIX } from './utils/utilities.js';
 
 /**
@@ -214,6 +217,7 @@ async function rollItem({
 } = {}) {
   // Basic template rendering data
   const { token } = this.actor;
+
   const templateData = {
     actor: this.actor,
     tokenId: token ? `${token.scene._id}.${token.id}` : null,
@@ -276,13 +280,16 @@ async function rollItem({
     const message = await ChatMessage.create(chatData);
 
     if (this.hasAttack) {
+      toggleAllDisabledButtonState({ messageId: message.id, isDisable: true });
       await this.rollAttack.bind(this)({ event, message });
-      if (event.altKey || event.ctrlKey || event.metaKey) {
+      if (hasVantageFromEvent(event)) {
         await this.rollAttack.bind(this)({ event, message, vantage: true });
       }
     }
 
     if (this.hasDamage) {
+      toggleAllDisabledButtonState({ messageId: message.id, isDisable: true });
+
       const autoRollDamage = game.settings.get(moduleName, SETTING_AUTO_ROLL_DAMAGE);
       const spellLevel = $(message.data.content).data('spell-level') || null;
 
@@ -300,6 +307,9 @@ async function rollItem({
         default:
       }
     }
+
+    toggleAllDisabledButtonState({ messageId: message.id, isDisable: false });
+
     return message;
   }
   return chatData;
@@ -409,7 +419,7 @@ async function rollDamage({
     ? /<button data-action="versatile">[^]*?<\/button>/ : /<button data-action="damage">[^]*?<\/button>/;
   const action = versatile ? 'versatile' : 'damage';
 
-  this.replaceButton({
+  await this.replaceButton({
     headerKey, headerRegex, buttonRegex, message, roll: damageRoll, action,
   });
 
@@ -448,7 +458,7 @@ async function rollFormula({ event, spellLevel, message }) {
   const buttonRegex = /<button data-action="formula">[^]*?<\/button>/;
   const action = 'formula';
 
-  this.replaceButton({
+  await this.replaceButton({
     headerKey, headerRegex, buttonRegex, message, roll, action,
   });
 
@@ -466,9 +476,11 @@ async function _onChatCardAction(event) {
 
   // Extract card data
   const button = event.currentTarget;
-  button.disabled = true;
   const card = button.closest('.chat-card');
   const { messageId } = card.closest('.message').dataset;
+
+  toggleAllDisabledButtonState({ messageId, isDisable: true });
+
   const message = game.messages.get(messageId);
   const { action } = button.dataset;
 
@@ -506,7 +518,6 @@ async function _onChatCardAction(event) {
       await item.rollFormula({ event, spellLevel, message }); break;
     case 'save': {
       const targets = this._getChatCardTargets(card);
-      debug(targets);
       targets.forEach(async (token) => {
         const speaker = ChatMessage.getSpeaker({ scene: canvas.scene, token });
         await token.actor.rollAbilitySave(button.dataset.ability, { event, speaker });
@@ -524,7 +535,7 @@ async function _onChatCardAction(event) {
   }
 
   // Re-enable the button
-  button.disabled = false;
+  toggleAllDisabledButtonState({ messageId, isDisable: false });
 }
 
 export const overrideItem = () => {

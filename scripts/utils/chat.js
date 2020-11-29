@@ -1,10 +1,8 @@
 import {
-  moduleName, SETTING_CRIT_CALCULATION, CRIT_CALCULATION_DEFAULT, CRIT_CALCULATION_MAXCRITDICE,
+  moduleName, SETTING_CRIT_CALCULATION,
+  CRIT_CALCULATION_DEFAULT, CRIT_CALCULATION_MAXCRITDICE,
 } from '../settings.js';
-
-const DICE_SO_NICE = 'dice-so-nice';
-
-const DICE_SO_NICE_IMMEDIATELY_DISPLAY_CHAT_MESSAGES = 'immediatelyDisplayChatMessages';
+import { immediatelyDisplayChatMessages, isDiceSoNiceEnabled } from './diceSoNiceHelpers.js';
 
 export function modifyChatHtml({ chatHtml, message, action }) {
   const html = $(chatHtml);
@@ -89,18 +87,25 @@ export function calculateCrit({
   return roll;
 }
 
+export async function toggleAllDisabledButtonState({
+  messageId, isDisable,
+}) {
+  const messageCard = $(document).find(`li.chat-message.message[data-message-id=${messageId}]`);
+  messageCard.find('button[data-action]').prop('disabled', isDisable);
+}
+
 export async function replaceButton({
   headerKey, buttonRegex, headerRegex, message, roll, action,
 }) {
   // Show roll on screen if Dice So Nice enabled
-  if (game.dice3d) {
-    const shouldImmediatelyDisplayChatMessage = game.settings.get(
-      DICE_SO_NICE, DICE_SO_NICE_IMMEDIATELY_DISPLAY_CHAT_MESSAGES,
-    );
+  if (isDiceSoNiceEnabled()) {
+    const shouldImmediatelyDisplayChatMessage = immediatelyDisplayChatMessages();
     if (shouldImmediatelyDisplayChatMessage) {
       game.dice3d.showForRoll(roll);
     } else {
+      toggleAllDisabledButtonState({ messageId: message.id, isDisable: true });
       await game.dice3d.showForRoll(roll);
+      toggleAllDisabledButtonState({ messageId: message.id, isDisable: false });
     }
   }
 
