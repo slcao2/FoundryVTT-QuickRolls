@@ -1,8 +1,14 @@
 export const TEMPLATE_PATH_PREFIX = 'modules/quick-rolls/templates';
 
+export const ATTACK = 'attack';
+export const VANTAGE = 'vantage';
+export const DAMAGE = 'damage';
+export const VERSATILE = 'versatile';
+export const FORMULA = 'formula';
+
 const PERMISSION_OWNER = 3;
 
-function getGMUsers() {
+const getGMUsers = () => {
   const gmUsers = [];
   game.users.forEach((value, key) => {
     if (value.isGM) {
@@ -10,9 +16,9 @@ function getGMUsers() {
     }
   });
   return gmUsers;
-}
+};
 
-export function ownedOnlyByGM(actor) {
+export const ownedOnlyByGM = (actor) => {
   const { permission } = actor.data;
   const gmUsers = getGMUsers();
   let isOnlyGmOwned = true;
@@ -22,4 +28,6 @@ export function ownedOnlyByGM(actor) {
     }
   });
   return isOnlyGmOwned;
-}
+};
+
+export const hasVantageFromEvent = (event) => event.altKey || event.ctrlKey || event.metaKey;

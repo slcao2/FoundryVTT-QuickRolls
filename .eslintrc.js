@@ -14,6 +14,7 @@ module.exports = {
     'consistent-return': 'off',
     'import/extensions': ['error', 'ignorePackages'],
     'import/prefer-default-export': 'off',
+    'linebreak-style': 'off',
     'max-len': ['error', {
       code: 120,
       ignoreComments: true,
