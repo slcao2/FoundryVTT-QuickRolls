@@ -2,8 +2,7 @@ import { registerSettings } from './settings.js';
 // import { debug } from './utils/logger.js';
 import { overrideItem } from './itemOverrides.js';
 import { overrideActorSetup, overrideActor } from './actorOverrides.js';
-
-export const TEMPLATE_PATH_PREFIX = 'modules/quick-rolls/templates';
+import { TEMPLATE_PATH_PREFIX } from './utils/helpers.js';
 
 // CONFIG.debug.hooks = true;
 // debug('CONFIG', CONFIG);

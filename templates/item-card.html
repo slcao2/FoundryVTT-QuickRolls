@@ -16,25 +16,46 @@
         {{#if hasAttack}}
         <div class="flexrow">
             <h4 class="qr-card-button-header qr-attack-header qr-hidden">{{ localize "DND5E.Attack" }}</h4>
-            <h4 class="qr-card-button-header qr-vantage-header qr-hidden">{{ localize "QR.Vantage" }}</h4>
+            <h4 class="qr-card-button-header qr-vantage-header qr-hidden">
+                {{ localize "QR.Vantage" }}
+            </h4>
         </div>
         <div class="flexrow">
             <button data-action="attack">{{ localize "DND5E.Attack" }}</button>
-            <button data-action="vantage">{{ localize "QR.Vantage" }}</button>
+            <button data-action="vantage">
+                <div title="{{localize 'QR.VantageTooltip'}}">
+                    <i class="fas fa-info-circle qr-tooltip"></i>
+                    {{ localize "QR.Vantage" }}
+                </div>
+            </button>
         </div>
         {{/if}}
         
         {{#if hasDamage}}
-        <h4 class="qr-card-button-header qr-damage-header qr-hidden">{{ localize "DND5E.Damage" }}</h4>
+        <h4 class="qr-card-button-header qr-damage-header qr-hidden">
+            {{ localize "DND5E.Damage" }}
+        </h4>
+        
         <button data-action="damage">
-            {{#if isHealing}}{{ localize "DND5E.Healing" }}
-            {{else}}{{localize "DND5E.Damage" }}{{/if}}
+            <div title="{{localize 'QR.CritTooltip'}}">
+                <i class="fas fa-info-circle qr-tooltip"></i>
+                {{#if isHealing}}{{ localize "DND5E.Healing" }}
+                {{else}}{{localize "DND5E.Damage" }}{{/if}}
+            </div>
         </button>
+        
         {{/if}}
 
         {{#if isVersatile}}
-        <h4 class="qr-card-button-header qr-versatile-header qr-hidden">{{ localize "DND5E.Versatile" }}</h4>
-        <button data-action="versatile">{{ localize "DND5E.Versatile" }}</button>
+        <h4 class="qr-card-button-header qr-versatile-header qr-hidden">
+            {{ localize "DND5E.Versatile" }}
+        </h4>
+        <button data-action="versatile">
+            <div title="{{localize 'QR.CritTooltip'}}">
+                <i class="fas fa-info-circle qr-tooltip"></i>
+                {{ localize "DND5E.Versatile" }}
+            </div>
+        </button>
         {{/if}}
 
         {{#if hasSave}}
@@ -44,8 +65,15 @@
         {{/if}}
 
         {{#if data.formula}}
-        <h4 class="qr-card-button-header qr-formula-header qr-hidden">{{ localize "DND5E.OtherFormula" }}</h4>
-        <button data-action="formula">{{ localize "DND5E.OtherFormula"}}</button>
+        <h4 class="qr-card-button-header qr-formula-header qr-hidden">
+            {{ localize "DND5E.OtherFormula" }}
+        </h4>
+        <button data-action="formula">
+            <div title="{{localize 'QR.CritTooltip'}}">
+                <i class="fas fa-info-circle qr-tooltip"></i>
+                {{ localize "DND5E.OtherFormula"}}
+            </div>
+        </button>
         {{/if}}
 
         {{#if hasAreaTarget}}
