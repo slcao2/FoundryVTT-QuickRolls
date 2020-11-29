@@ -5,7 +5,7 @@ import {
 import {
   moduleName, SETTING_AUTO_ROLL_DAMAGE, AUTO_ROLL_DAMAGE_DM_ONLY, AUTO_ROLL_DAMAGE_ALL,
 } from './settings.js';
-import { ownedOnlyByGM } from './utils/helpers.js';
+import { TEMPLATE_PATH_PREFIX, ownedOnlyByGM } from './utils/helpers.js';
 import { DEFAULT_RADIX } from './utils/utilities.js';
 
 /**
@@ -182,13 +182,13 @@ async function rollAttack({ event, message, vantage = false } = {}) {
   // Replace button with roll
   let headerKey = 'DND5E.Attack';
   let headerRegex = /<h4 class="qr-card-button-header qr-attack-header qr-hidden">[^<]*<\/h4>/;
-  let buttonRegex = /<button data-action="attack">[^<]*<\/button>/;
+  let buttonRegex = /<button data-action="attack">[^]*?<\/button>/;
   let action = 'attack';
 
   if (vantage) {
     headerKey = adv === -1 ? 'QR.Disadvantage' : 'QR.Advantage';
     headerRegex = /<h4 class="qr-card-button-header qr-vantage-header qr-hidden">[^<]*<\/h4>/;
-    buttonRegex = /<button data-action="vantage">[^<]*<\/button>/;
+    buttonRegex = /<button data-action="vantage">[^]*?<\/button>/;
     action = 'vantage';
   }
 
@@ -244,7 +244,7 @@ async function rollItem({
 
   // Render the chat card template
   const templateType = ['tool'].includes(this.data.type) ? this.data.type : 'item';
-  const template = `modules/quick-rolls/templates/${templateType}-card.html`;
+  const template = `${TEMPLATE_PATH_PREFIX}/${templateType}-card.html`;
   const html = await renderTemplate(template, templateData);
 
   // Basic chat message data
@@ -406,7 +406,7 @@ async function rollDamage({
     ? /<h4 class="qr-card-button-header qr-versatile-header qr-hidden">[^<]*<\/h4>/
     : /<h4 class="qr-card-button-header qr-damage-header qr-hidden">[^<]*<\/h4>/;
   const buttonRegex = versatile
-    ? /<button data-action="versatile">[^<]*<\/button>/ : /<button data-action="damage">[^<]*<\/button>/;
+    ? /<button data-action="versatile">[^]*?<\/button>/ : /<button data-action="damage">[^]*?<\/button>/;
   const action = versatile ? 'versatile' : 'damage';
 
   this.replaceButton({
@@ -445,7 +445,7 @@ async function rollFormula({ event, spellLevel, message }) {
   // Replace button with roll
   const headerKey = 'DND5E.OtherFormula';
   const headerRegex = /<h4 class="qr-card-button-header qr-formula-header qr-hidden">[^<]*<\/h4>/;
-  const buttonRegex = /<button data-action="formula">[^<]*<\/button>/;
+  const buttonRegex = /<button data-action="formula">[^]*?<\/button>/;
   const action = 'formula';
 
   this.replaceButton({

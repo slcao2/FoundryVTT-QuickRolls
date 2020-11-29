@@ -14,3 +14,7 @@
 .qr-discarded {
   filter: sepia(0.5) contrast(0.75) opacity(0.75);
 }
+
+.qr-tooltip {
+  color: gray;
+}

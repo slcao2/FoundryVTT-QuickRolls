@@ -1,3 +1,5 @@
+export const TEMPLATE_PATH_PREFIX = 'modules/quick-rolls/templates';
+
 const PERMISSION_OWNER = 3;
 
 function getGMUsers() {
