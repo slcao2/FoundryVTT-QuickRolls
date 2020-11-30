@@ -288,6 +288,9 @@ async function rollItem({
       const autoRollDamage = game.settings.get(moduleName, SETTING_AUTO_ROLL_DAMAGE);
       const spellLevel = $(message.data.content).data('spell-level') || null;
 
+      // Don't roll as a crit if it's rolling from the item
+      event.altKey = false;
+
       switch (autoRollDamage) {
         case AUTO_ROLL_DAMAGE_DM_ONLY:
           if (ownedOnlyByGM(this.actor)) {
