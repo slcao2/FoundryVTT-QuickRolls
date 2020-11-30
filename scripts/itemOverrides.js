@@ -79,10 +79,6 @@ async function rollAttack({ event, message, vantage = false } = {}) {
   let halflingLucky = false;
   if (flags.halflingLucky) halflingLucky = true;
 
-  // Apply Reliable Talent
-  let reliableTalent = false;
-  if (flags.reliableTalent) reliableTalent = true;
-
   // Prepare Message Data
   parts.push('@bonus');
 
@@ -106,8 +102,7 @@ async function rollAttack({ event, message, vantage = false } = {}) {
     }
 
     // Prepend the d20 roll
-    let formula = `${nd}d20${mods}`;
-    if (reliableTalent) formula = `{${nd}d20${mods},10}kh`;
+    const formula = `${nd}d20${mods}`;
     _parts.unshift(formula);
 
     // Optionally include a situational bonus
