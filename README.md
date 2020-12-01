@@ -30,8 +30,10 @@ You can install this module in a couple different ways outlined below.
 ![Item Card Vantage Button](https://raw.githubusercontent.com/slcao2/FoundryVTT-QuickRolls/main/screenshots/item-roll-vantage-button.gif)
 * Alt clicking will roll damage with critical damage.
 ![Item Card Critical Override](https://raw.githubusercontent.com/slcao2/FoundryVTT-QuickRolls/main/screenshots/item-roll-crit-override.gif)
-* Advantage/Disadvantage is highlighted properly on the card.
+* Advantage/Disadvantage is highlighted properly on the card.  
 ![Attack Highlighting](https://raw.githubusercontent.com/slcao2/FoundryVTT-QuickRolls/main/screenshots/attack-highlighting.jpg)
+* Reroll a roll on the item card by clicking the redo button.
+![Reroll](https://raw.githubusercontent.com/slcao2/FoundryVTT-QuickRolls/main/screenshots/reroll.gif)
 
 ### Automatic Crit Calculation
 * A setting can be enabled to roll either the default dnd5e critical calculation or roll with the crit die as the max amount.
