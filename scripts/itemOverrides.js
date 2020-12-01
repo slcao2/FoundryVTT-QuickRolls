@@ -1,13 +1,13 @@
 import { error } from './utils/logger.js';
 import {
-  calculateCrit, replaceButton, toggleAllDisabledButtonState,
+  calculateCrit, replaceButton, resetMessage, toggleAllDisabledButtonState,
 } from './utils/chat.js';
 import {
   moduleName, SETTING_AUTO_ROLL_DAMAGE,
   AUTO_ROLL_DAMAGE_DM_ONLY, AUTO_ROLL_DAMAGE_ALL,
 } from './settings.js';
 import {
-  TEMPLATE_PATH_PREFIX, ownedOnlyByGM, hasVantageFromEvent,
+  TEMPLATE_PATH_PREFIX, ownedOnlyByGM, hasVantageFromEvent, ATTACK, VANTAGE,
 } from './utils/helpers.js';
 import { DEFAULT_RADIX } from './utils/utilities.js';
 
@@ -20,7 +20,12 @@ import { DEFAULT_RADIX } from './utils/utilities.js';
  * @param {boolean} [vantage]         Whether the attack is being made with advantager or disadvantage
  * @return {Promise<Roll|null>}       A Promise which resolves to the created Roll instance
  */
-async function rollAttack({ event, message, vantage = false } = {}) {
+async function rollAttack({
+  event, message, vantage = false, isReroll = false,
+} = {}) {
+  if (isReroll) {
+    resetMessage({ message, vantage });
+  }
   const itemData = this.data.data;
   const actorData = this.actor.data.data;
   const flags = this.actor.data.flags.dnd5e || {};
@@ -181,13 +186,22 @@ async function rollAttack({ event, message, vantage = false } = {}) {
   let headerKey = 'DND5E.Attack';
   let headerRegex = /<h4 class="qr-card-button-header qr-attack-header qr-hidden">[^<]*<\/h4>/;
   let buttonRegex = /<button data-action="attack">[^]*?<\/button>/;
-  let action = 'attack';
+  let action = ATTACK;
 
   if (vantage) {
     headerKey = adv === -1 ? 'QR.Disadvantage' : 'QR.Advantage';
     headerRegex = /<h4 class="qr-card-button-header qr-vantage-header qr-hidden">[^<]*<\/h4>/;
     buttonRegex = /<button data-action="vantage">[^]*?<\/button>/;
-    action = 'vantage';
+    action = VANTAGE;
+  }
+
+  if (isReroll) {
+    if (vantage) {
+      headerRegex = /<h4 class="qr-card-button-header qr-vantage-header">[^<]*<button data-action="vantage-reroll" class="qr-icon-button"><i class="fas fa-redo qr-tooltip"><\/i><\/button><\/h4>/;
+    } else {
+      headerRegex = null;
+    }
+    buttonRegex = null;
   }
 
   await this.replaceButton({
@@ -323,7 +337,7 @@ async function rollItem({
  * @return {Promise<Roll>}          A Promise which resolves to the created Roll instance
  */
 async function rollDamage({
-  event, spellLevel = null, versatile = false, message,
+  event, spellLevel = null, versatile = false, message, isReroll = false,
 } = {}) {
   if (!this.hasDamage) throw new Error('You may not make a Damage Roll with this Item.');
   const itemData = this.data.data;
@@ -410,12 +424,17 @@ async function rollDamage({
   } else if (this.isHealing) {
     headerKey = 'DND5E.Healing';
   }
-  const headerRegex = versatile
+  let headerRegex = versatile
     ? /<h4 class="qr-card-button-header qr-versatile-header qr-hidden">[^<]*<\/h4>/
     : /<h4 class="qr-card-button-header qr-damage-header qr-hidden">[^<]*<\/h4>/;
-  const buttonRegex = versatile
+  let buttonRegex = versatile
     ? /<button data-action="versatile">[^]*?<\/button>/ : /<button data-action="damage">[^]*?<\/button>/;
   const action = versatile ? 'versatile' : 'damage';
+
+  if (isReroll) {
+    headerRegex = null;
+    buttonRegex = null;
+  }
 
   await this.replaceButton({
     headerKey, headerRegex, buttonRegex, message, roll: damageRoll, action,
@@ -433,7 +452,9 @@ async function rollDamage({
  * @param {ChatMessage} [message]     The chat message event associate with the roll
  * @return {Promise<Roll>}        A Promise which resolves to the created Roll instance
  */
-async function rollFormula({ event, spellLevel, message }) {
+async function rollFormula({
+  event, spellLevel, message, isReroll = false,
+}) {
   if (!this.data.data.formula) {
     throw new Error('This Item does not have a formula to roll!');
   }
@@ -452,9 +473,14 @@ async function rollFormula({ event, spellLevel, message }) {
 
   // Replace button with roll
   const headerKey = 'DND5E.OtherFormula';
-  const headerRegex = /<h4 class="qr-card-button-header qr-formula-header qr-hidden">[^<]*<\/h4>/;
-  const buttonRegex = /<button data-action="formula">[^]*?<\/button>/;
+  let headerRegex = /<h4 class="qr-card-button-header qr-formula-header qr-hidden">[^<]*<\/h4>/;
+  let buttonRegex = /<button data-action="formula">[^]*?<\/button>/;
   const action = 'formula';
+
+  if (isReroll) {
+    headerRegex = null;
+    buttonRegex = null;
+  }
 
   await this.replaceButton({
     headerKey, headerRegex, buttonRegex, message, roll, action,
@@ -504,16 +530,34 @@ async function _onChatCardAction(event) {
   switch (action) {
     case 'attack':
       await item.rollAttack({ event, message }); break;
+    case 'attack-reroll':
+      await item.rollAttack({ event, message, isReroll: true }); break;
     case 'vantage':
       await item.rollAttack({ event, message, vantage: true }); break;
+    case 'vantage-reroll':
+      await item.rollAttack({
+        event, message, vantage: true, isReroll: true,
+      }); break;
     case 'damage':
       await item.rollDamage({ event, spellLevel, message }); break;
+    case 'damage-reroll':
+      await item.rollDamage({
+        event, spellLevel, message, isReroll: true,
+      }); break;
     case 'versatile':
       await item.rollDamage({
         event, spellLevel, versatile: true, message,
       }); break;
+    case 'versatile-reroll':
+      await item.rollDamage({
+        event, spellLevel, message, versatile: true, isReroll: true,
+      }); break;
     case 'formula':
       await item.rollFormula({ event, spellLevel, message }); break;
+    case 'formula-reroll':
+      await item.rollFormula({
+        event, spellLevel, message, isReroll: true,
+      }); break;
     case 'save': {
       const targets = this._getChatCardTargets(card);
       targets.forEach(async (token) => {
