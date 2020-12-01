@@ -3,24 +3,56 @@ import {
   CRIT_CALCULATION_DEFAULT, CRIT_CALCULATION_MAXCRITDICE,
 } from '../settings.js';
 import { immediatelyDisplayChatMessages, isDiceSoNiceEnabled } from './diceSoNiceHelpers.js';
+import { debug } from './logger.js';
+
+export function resetMessage({ message, vantage }) {
+  message.isCritical = undefined;
+  message.isFumble = undefined;
+  if (vantage) {
+    message.isAdvantage = undefined;
+    message.isVantageCritical = undefined;
+    message.isVantageFumble = undefined;
+    message.vantageRollTotal = undefined;
+  } else {
+    message.isAttackCritical = undefined;
+    message.isAttackFumble = undefined;
+    message.attackRollTotal = undefined;
+  }
+}
 
 export function modifyChatHtml({ chatHtml, message, action }) {
   const html = $(chatHtml);
 
   switch (action) {
     case 'attack':
-      message.isCritical = message.isAttackCritical;
-      message.isFumble = message.isAttackFumble;
-      break;
-    case 'vantage':
-      if ((message.isAdvantage && message.attackRollTotal >= message.vantageRollTotal)
+      if (message.isAdvantage === undefined) {
+        message.isCritical = message.isAttackCritical;
+        message.isFumble = message.isAttackFumble;
+      } else if ((message.isAdvantage && message.attackRollTotal >= message.vantageRollTotal)
       || (!message.isAdvantage && message.attackRollTotal <= message.vantageRollTotal)) {
         html.find('.qr-vantage').addClass('qr-discarded');
+        html.find('.qr-attack').removeClass('qr-discarded');
         message.isCritical = message.isAttackCritical;
         message.isFumble = message.isAttackFumble;
       } else if ((message.isAdvantage && message.attackRollTotal < message.vantageRollTotal)
       || (!message.isAdvantage && message.attackRollTotal > message.vantageRollTotal)) {
         html.find('.qr-attack').addClass('qr-discarded');
+        html.find('.qr-vantage').removeClass('qr-discarded');
+        message.isCritical = message.isVantageCritical;
+        message.isFumble = message.isVantageFumble;
+      }
+      break;
+    case 'vantage':
+      if ((message.isAdvantage && message.attackRollTotal >= message.vantageRollTotal)
+      || (!message.isAdvantage && message.attackRollTotal <= message.vantageRollTotal)) {
+        html.find('.qr-vantage').addClass('qr-discarded');
+        html.find('.qr-attack').removeClass('qr-discarded');
+        message.isCritical = message.isAttackCritical;
+        message.isFumble = message.isAttackFumble;
+      } else if ((message.isAdvantage && message.attackRollTotal < message.vantageRollTotal)
+      || (!message.isAdvantage && message.attackRollTotal > message.vantageRollTotal)) {
+        html.find('.qr-attack').addClass('qr-discarded');
+        html.find('.qr-vantage').removeClass('qr-discarded');
         message.isCritical = message.isVantageCritical;
         message.isFumble = message.isVantageFumble;
       }
@@ -94,6 +126,15 @@ export async function toggleAllDisabledButtonState({
   messageCard.find('button[data-action]').prop('disabled', isDisable);
 }
 
+export function replaceRollString({
+  action, message, newRollHtml,
+}) {
+  const content = $(duplicate(message.data.content));
+  const oldRoll = content.find(`.qr-${action}`);
+  oldRoll.replaceWith($(newRollHtml));
+  return content.prop('outerHTML');
+}
+
 export async function replaceButton({
   headerKey, buttonRegex, headerRegex, message, roll, action,
 }) {
@@ -114,12 +155,24 @@ export async function replaceButton({
   const modifiedRollHtml = modifyRollHtml({
     rollHtml, roll, action, message,
   });
-  const updateHeader = `<h4 class="qr-card-button-header qr-${action}-header">${game.i18n.localize(headerKey)}</h4>`;
-  const updateButton = `${modifiedRollHtml}`;
+  const updateHeader = `<h4 class="qr-card-button-header qr-${action}-header">`
+    + `${game.i18n.localize(headerKey)}`
+    + `<button data-action="${action}-reroll" class="qr-icon-button">`
+    + '<i class="fas fa-redo qr-tooltip"></i>'
+    + '</button>'
+    + '</h4>';
 
-  const updatedContent = content
-    .replace(headerRegex, updateHeader)
-    .replace(buttonRegex, updateButton);
+  let updatedContent = content;
+
+  if (buttonRegex) {
+    updatedContent = updatedContent.replace(buttonRegex, modifiedRollHtml);
+  } else {
+    updatedContent = replaceRollString({ action, message, newRollHtml: modifiedRollHtml });
+  }
+
+  if (headerRegex) {
+    updatedContent = updatedContent.replace(headerRegex, updateHeader);
+  }
   const modifiedContent = modifyChatHtml({ chatHtml: updatedContent, message, action });
 
   await message.update({ content: modifiedContent });

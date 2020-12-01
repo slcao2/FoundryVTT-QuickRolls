@@ -17,4 +17,27 @@
 
 .qr-tooltip {
   color: gray;
+  margin: 0;
+}
+
+.item-card .qr-card-buttons .flexrow .qr-card-button-header .qr-icon-button {
+  width: auto;
+  padding: 2px;
+  margin: 0 0 0 5px;
+  border: 1px groove #b5b3a4;
+  border-radius: 5px;
+  background: rgba(0, 0, 0, 0);
+  height: auto;
+  line-height: 10px;
+}
+
+.item-card .qr-card-buttons .qr-card-button-header .qr-icon-button {
+  width: auto;
+  padding: 2px;
+  margin: 0 0 0 5px;
+  border: 1px groove #b5b3a4;
+  border-radius: 5px;
+  background: rgba(0, 0, 0, 0);
+  height: auto;
+  line-height: 10px;
 }
