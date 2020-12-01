@@ -197,6 +197,7 @@ async function rollAttack({
 
   if (isReroll) {
     if (vantage) {
+      // eslint-disable-next-line max-len
       headerRegex = /<h4 class="qr-card-button-header qr-vantage-header">[^<]*<button data-action="vantage-reroll" class="qr-icon-button"><i class="fas fa-redo qr-tooltip"><\/i><\/button><\/h4>/;
     } else {
       headerRegex = null;
@@ -464,11 +465,19 @@ async function rollFormula({
   if (spellLevel) rollData.item.level = spellLevel;
 
   // Invoke the roll and submit it to chat
-  let roll = new Roll(rollData.item.formula, rollData).roll();
+  let roll = new Roll(rollData.item.formula, rollData);
   if (message.isCritical || event.altKey) {
     roll = calculateCrit({
       parts: [rollData.item.formula], rollData, roll, criticalMultiplier: 2, criticalBonusDice: 0,
     });
+  }
+
+  try {
+    roll = roll.roll();
+  } catch (err) {
+    error(err);
+    ui.notifications.error(`Dice roll evaluation failed: ${err.message}`);
+    roll = null;
   }
 
   // Replace button with roll
