@@ -1,4 +1,5 @@
 import AbilityUseDialog from './ability-use-dialog.js';
+import AbilityTemplate from './ability-template.js';
 import { DEFAULT_RADIX } from './utils/utilities.js';
 
 /**
