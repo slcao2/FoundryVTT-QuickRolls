@@ -10,6 +10,7 @@ import {
   TEMPLATE_PATH_PREFIX, ownedOnlyByGM, hasVantageFromEvent, ATTACK, VANTAGE,
 } from './utils/helpers.js';
 import { DEFAULT_RADIX } from './utils/utilities.js';
+import AbilityTemplate from './ability-template.js';
 
 /**
  * Place an attack roll using an item (weapon, feat, spell, or equipment)
