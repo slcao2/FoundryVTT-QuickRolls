@@ -1,16 +1,19 @@
-import { error } from './utils/logger.js';
+import { debug, error } from './utils/logger.js';
 import {
-  calculateCrit, replaceButton, resetMessage, toggleAllDisabledButtonState,
+  updateButtonAndHeader,
 } from './utils/chat.js';
 import {
   moduleName, SETTING_AUTO_ROLL_DAMAGE,
   AUTO_ROLL_DAMAGE_DM_ONLY, AUTO_ROLL_DAMAGE_ALL,
 } from './settings.js';
 import {
-  TEMPLATE_PATH_PREFIX, ownedOnlyByGM, hasVantageFromEvent, ATTACK, VANTAGE,
+  ownedOnlyByGM, hasVantageFromEvent, ATTACK, VANTAGE, DAMAGE, VERSATILE, FORMULA,
 } from './utils/helpers.js';
+import { TEMPLATE_PATH_PREFIX } from './utils/templatePathPrefix.js';
 import { DEFAULT_RADIX } from './utils/utilities.js';
 import AbilityTemplate from './ability-template.js';
+import { calculateCrit, rollArbitrary, rollD20 } from './utils/roll.js';
+import { isNodeCritical, toggleAllDisabledButtonState } from './utils/domUtils.js';
 
 /**
  * Place an attack roll using an item (weapon, feat, spell, or equipment)
@@ -22,14 +25,13 @@ import AbilityTemplate from './ability-template.js';
  * @return {Promise<Roll|null>}       A Promise which resolves to the created Roll instance
  */
 async function rollAttack({
-  event, message, vantage = false, isReroll = false,
+  event, message, vantage = false, isReroll = false, action,
 } = {}) {
-  if (isReroll) {
-    resetMessage({ message, vantage });
-  }
   const itemData = this.data.data;
   const actorData = this.actor.data.data;
-  const flags = this.actor.data.flags.dnd5e || {};
+  const actorFlags = this.actor.data.flags.dnd5e || {};
+  const rollFlags = {};
+  const htmlFlags = {};
   if (!this.hasAttack) {
     throw new Error('You may not place an Attack Roll with this Item.');
   }
@@ -65,149 +67,54 @@ async function rollAttack({
     }
   }
 
+  rollFlags.fumble = 1;
+
   // Expanded critical hit thresholds
-  let critical = 20;
-  if ((this.data.type === 'weapon') && flags.weaponCriticalThreshold) {
-    critical = parseInt(flags.weaponCriticalThreshold, DEFAULT_RADIX);
-  } else if ((this.data.type === 'spell') && flags.spellCriticalThreshold) {
-    critical = parseInt(flags.spellCriticalThreshold, DEFAULT_RADIX);
+  rollFlags.critical = 20;
+  if ((this.data.type === 'weapon') && actorFlags.weaponCriticalThreshold) {
+    rollFlags.critical = parseInt(actorFlags.weaponCriticalThreshold, DEFAULT_RADIX);
+  } else if ((this.data.type === 'spell') && actorFlags.spellCriticalThreshold) {
+    rollFlags.critical = parseInt(actorFlags.spellCriticalThreshold, DEFAULT_RADIX);
   }
 
-  // Elven Accuracy
-  let elvenAccuracy = false;
+  // Check Elven Accuracy
   if (['weapon', 'spell'].includes(this.data.type)) {
-    if (flags.elvenAccuracy && ['dex', 'int', 'wis', 'cha'].includes(this.abilityMod)) {
-      elvenAccuracy = true;
+    if (actorFlags.elvenAccuracy && ['dex', 'int', 'wis', 'cha'].includes(this.abilityMod)) {
+      rollFlags.elvenAccuracy = true;
     }
   }
 
-  // Apply Halfling Lucky
-  let halflingLucky = false;
-  if (flags.halflingLucky) halflingLucky = true;
+  // Check Halfling Lucky
+  if (actorFlags.halflingLucky) rollFlags.halflingLucky = true;
 
   // Prepare Message Data
-  parts.push('@bonus');
-
-  // Handle fast-forward events
-  let adv = 0;
-  if (vantage) {
-    adv = event.ctrlKey || event.metaKey ? -1 : 1;
-    message.isAdvantage = adv > 0;
+  if (rollData.bonus) {
+    parts.push('@bonus');
   }
 
-  // Define the inner roll function
-  const _roll = (_parts, _adv, form) => {
-    // Determine the d20 roll and modifiers
-    let nd = 1;
-    let mods = halflingLucky ? 'r=1' : '';
-
-    // Handle advantage
-    if (_adv === 1 && elvenAccuracy) {
-      nd = 2;
-      mods += 'kh';
-    }
-
-    // Prepend the d20 roll
-    const formula = `${nd}d20${mods}`;
-    _parts.unshift(formula);
-
-    // Optionally include a situational bonus
-    if (form) {
-      rollData.bonus = form.bonus.value;
-    }
-    if (!rollData.bonus) _parts.pop();
-
-    // Optionally include an ability score selection (used for tool checks)
-    const ability = form ? form.ability : null;
-    if (ability && ability.value) {
-      rollData.ability = ability.value;
-      const abl = rollData.abilities[rollData.ability];
-      if (abl) {
-        rollData.mod = abl.mod;
-      }
-    }
-
-    // Execute the roll
-    const roll = new Roll(_parts.join(' + '), rollData);
-    try {
-      roll.roll();
-    } catch (err) {
-      error(err);
-      ui.notifications.error(`Dice roll evaluation failed: ${err.message}`);
-      return null;
-    }
-
-    // Flag d20 options for any 20-sided dice in the roll
-    const fumble = 1;
-    const targetValue = null;
-    roll.dice.forEach((d) => {
-      if (d.faces === 20) {
-        d.options.critical = critical;
-        d.options.fumble = fumble;
-        if (targetValue) d.options.target = targetValue;
-      }
-    });
-
-    return roll;
-  };
+  // Handle fast-forward events
+  let advantage = 0;
+  if (vantage) {
+    advantage = event.ctrlKey || event.metaKey ? -1 : 1;
+    htmlFlags.vantageTypeHeader = advantage > 0 ? 'qr-advantage-header' : 'qr-disadvantage-header';
+  }
 
   // Create the Roll instance
-  const attackRoll = _roll.bind(this)(parts, adv);
+  const attackRoll = rollD20({
+    parts, rollData, advantage, flags: rollFlags,
+  });
 
   if (attackRoll === false) return null;
 
   // Handle resource consumption if the attack roll was made
-  if (!vantage) {
+  if (!vantage && !isReroll) {
     const allowed = await this._handleResourceConsumption({ isCard: false, isAttack: true });
     if (allowed === false) return null;
-    message.attackRollTotal = attackRoll.total;
-    attackRoll.dice.forEach((d) => {
-      d.results.forEach((r) => {
-        if (r.active && d.options.critical === r.result) {
-          message.isAttackCritical = true;
-        } else if (r.active && d.options.fumble === r.result) {
-          message.isAttackFumble = true;
-        }
-      });
-    });
-  } else {
-    message.vantageRollTotal = attackRoll.total;
-    attackRoll.dice.forEach((d) => {
-      d.results.forEach((r) => {
-        if (r.active && d.options.critical === r.result) {
-          message.isVantageCritical = true;
-        } else if (r.active && d.options.fumble === r.result) {
-          message.isVantageFumble = true;
-        }
-      });
-    });
   }
 
-  // Replace button with roll
-  let headerKey = 'DND5E.Attack';
-  let headerRegex = /<h4 class="qr-card-button-header qr-attack-header qr-hidden">[^<]*<\/h4>/;
-  let buttonRegex = /<button data-action="attack">[^]*?<\/button>/;
-  let action = ATTACK;
-
-  if (vantage) {
-    headerKey = adv === -1 ? 'QR.Disadvantage' : 'QR.Advantage';
-    headerRegex = /<h4 class="qr-card-button-header qr-vantage-header qr-hidden">[^<]*<\/h4>/;
-    buttonRegex = /<button data-action="vantage">[^]*?<\/button>/;
-    action = VANTAGE;
-  }
-
-  if (isReroll) {
-    if (vantage) {
-      // eslint-disable-next-line max-len
-      headerRegex = /<h4 class="qr-card-button-header qr-vantage-header">[^<]*<button data-action="vantage-reroll" class="qr-icon-button"><i class="fas fa-redo qr-tooltip"><\/i><\/button><\/h4>/;
-    } else {
-      headerRegex = null;
-    }
-    buttonRegex = null;
-  }
-
-  await this.replaceButton({
-    headerKey, buttonRegex, headerRegex, message, roll: attackRoll, action,
+  const headerKey = (advantage > 0 && 'QR.Advantage') || (advantage < 0 && 'QR.Disadvantage') || 'DND5E.Attack';
+  await updateButtonAndHeader({
+    contentNode: $(message.data.content), roll: attackRoll, action, headerKey, message, flags: htmlFlags,
   });
 
   return attackRoll;
@@ -292,9 +199,11 @@ async function rollItem({
 
     if (this.hasAttack) {
       toggleAllDisabledButtonState({ messageId: message.id, isDisable: true });
-      await this.rollAttack.bind(this)({ event, message });
+      await this.rollAttack.bind(this)({ event, message, action: ATTACK });
       if (hasVantageFromEvent(event)) {
-        await this.rollAttack.bind(this)({ event, message, vantage: true });
+        await this.rollAttack.bind(this)({
+          event, message, vantage: true, action: VANTAGE,
+        });
       }
     }
 
@@ -311,12 +220,16 @@ async function rollItem({
         case AUTO_ROLL_DAMAGE_DM_ONLY:
           if (ownedOnlyByGM(this.actor)) {
             this.data.data.level = originalSpellLevel;
-            await this.rollDamage({ event, spellLevel, message });
+            await this.rollDamage({
+              event, spellLevel, message, action: DAMAGE,
+            });
           }
           break;
         case AUTO_ROLL_DAMAGE_ALL:
           this.data.data.level = originalSpellLevel;
-          await this.rollDamage({ event, spellLevel, message });
+          await this.rollDamage({
+            event, spellLevel, message, action: DAMAGE,
+          });
           break;
         default:
       }
@@ -339,11 +252,12 @@ async function rollItem({
  * @return {Promise<Roll>}          A Promise which resolves to the created Roll instance
  */
 async function rollDamage({
-  event, spellLevel = null, versatile = false, message, isReroll = false,
+  event, spellLevel = null, versatile = false, message, isReroll = false, action,
 } = {}) {
   if (!this.hasDamage) throw new Error('You may not make a Damage Roll with this Item.');
   const itemData = this.data.data;
   const actorData = this.actor.data.data;
+  const rollFlags = {};
 
   // Get roll data
   const parts = itemData.damage.parts.map((d) => d[0]);
@@ -380,66 +294,21 @@ async function rollDamage({
   }
 
   // Prepare Message Data
-  parts.push('@bonus');
+  if (rollData.bonus) {
+    parts.push('@bonus');
+  }
 
-  // Define inner roll function
-  const _roll = (_parts, crit, form) => {
-    const criticalMultiplier = 2;
-    // Scale melee critical hit damage
-    const criticalBonusDice = itemData.actionType === 'mwak'
-      ? this.actor.getFlag('dnd5e', 'meleeCriticalDamageDice') ?? 0 : 0;
-
-    // Optionally include a situational bonus
-    if (form) {
-      rollData.bonus = form.bonus.value;
-    }
-    if (!rollData.bonus) parts.pop();
-
-    // Create the damage roll
-    let roll = new Roll(parts.join('+'), rollData);
-
-    // Modify the damage formula for critical hits
-    if (crit) {
-      roll = calculateCrit({
-        parts, rollData, roll, criticalMultiplier, criticalBonusDice,
-      });
-    }
-
-    // Execute the roll
-    try {
-      return roll.roll();
-    } catch (err) {
-      error(err);
-      ui.notifications.error(`Dice roll evaluation failed: ${err.message}`);
-      return null;
-    }
-  };
-
-  const critical = (message.isCritical || event.altKey) && !event.ctrlKey;
+  // eslint-disable-next-line max-len
+  rollFlags.criticalBonusDice = itemData.actionType === 'mwak' || this.actor.getFlag('dnd5e', 'meleeCriticalDamageDice');
+  const isCritical = (isNodeCritical($(message.data.content)) || event.altKey) && !event.ctrlKey;
   // Create the Roll instance
-  const damageRoll = _roll.bind(this)(parts, critical);
+  const damageRoll = rollArbitrary({
+    parts, rollData, isCritical, flags: rollFlags,
+  });
 
-  // Replace button with roll
-  let headerKey = 'DND5E.Damage';
-  if (versatile) {
-    headerKey = 'DND5E.Versatile';
-  } else if (this.isHealing) {
-    headerKey = 'DND5E.Healing';
-  }
-  let headerRegex = versatile
-    ? /<h4 class="qr-card-button-header qr-versatile-header qr-hidden">[^<]*<\/h4>/
-    : /<h4 class="qr-card-button-header qr-damage-header qr-hidden">[^<]*<\/h4>/;
-  let buttonRegex = versatile
-    ? /<button data-action="versatile">[^]*?<\/button>/ : /<button data-action="damage">[^]*?<\/button>/;
-  const action = versatile ? 'versatile' : 'damage';
-
-  if (isReroll) {
-    headerRegex = null;
-    buttonRegex = null;
-  }
-
-  await this.replaceButton({
-    headerKey, headerRegex, buttonRegex, message, roll: damageRoll, action,
+  const headerKey = (this.isHealing && 'DND5E.Healing') || (versatile && 'DND5E.Versatile') || 'DND5E.Damage';
+  await updateButtonAndHeader({
+    contentNode: $(message.data.content), roll: damageRoll, action, headerKey, message,
   });
 
   return damageRoll;
@@ -455,7 +324,7 @@ async function rollDamage({
  * @return {Promise<Roll>}        A Promise which resolves to the created Roll instance
  */
 async function rollFormula({
-  event, spellLevel, message, isReroll = false,
+  event, spellLevel, message, isReroll = false, action,
 }) {
   if (!this.data.data.formula) {
     throw new Error('This Item does not have a formula to roll!');
@@ -467,7 +336,7 @@ async function rollFormula({
 
   // Invoke the roll and submit it to chat
   let roll = new Roll(rollData.item.formula, rollData);
-  if (message.isCritical || event.altKey) {
+  if ((isNodeCritical($(message.data.content)) || event.altKey) && !event.ctrlKey) {
     roll = calculateCrit({
       parts: [rollData.item.formula], rollData, roll, criticalMultiplier: 2, criticalBonusDice: 0,
     });
@@ -481,19 +350,9 @@ async function rollFormula({
     roll = null;
   }
 
-  // Replace button with roll
   const headerKey = 'DND5E.OtherFormula';
-  let headerRegex = /<h4 class="qr-card-button-header qr-formula-header qr-hidden">[^<]*<\/h4>/;
-  let buttonRegex = /<button data-action="formula">[^]*?<\/button>/;
-  const action = 'formula';
-
-  if (isReroll) {
-    headerRegex = null;
-    buttonRegex = null;
-  }
-
-  await this.replaceButton({
-    headerKey, headerRegex, buttonRegex, message, roll, action,
+  await updateButtonAndHeader({
+    contentNode: $(message.data.content), roll, action, headerKey, message,
   });
 
   return roll;
@@ -538,35 +397,43 @@ async function _onChatCardAction(event) {
 
   // Handle different actions
   switch (action) {
-    case 'attack':
-      await item.rollAttack({ event, message }); break;
+    case ATTACK:
+      await item.rollAttack({ event, message, action }); break;
     case 'attack-reroll':
-      await item.rollAttack({ event, message, isReroll: true }); break;
-    case 'vantage':
-      await item.rollAttack({ event, message, vantage: true }); break;
+      await item.rollAttack({
+        event, message, isReroll: true, action: ATTACK,
+      }); break;
+    case VANTAGE:
+      await item.rollAttack({
+        event, message, vantage: true, action,
+      }); break;
     case 'vantage-reroll':
       await item.rollAttack({
-        event, message, vantage: true, isReroll: true,
+        event, message, vantage: true, isReroll: true, action: VANTAGE,
       }); break;
-    case 'damage':
-      await item.rollDamage({ event, spellLevel, message }); break;
+    case DAMAGE:
+      await item.rollDamage({
+        event, spellLevel, message, action,
+      }); break;
     case 'damage-reroll':
       await item.rollDamage({
-        event, spellLevel, message, isReroll: true,
+        event, spellLevel, message, isReroll: true, action: DAMAGE,
       }); break;
-    case 'versatile':
+    case VERSATILE:
       await item.rollDamage({
-        event, spellLevel, versatile: true, message,
+        event, spellLevel, versatile: true, message, action,
       }); break;
     case 'versatile-reroll':
       await item.rollDamage({
-        event, spellLevel, message, versatile: true, isReroll: true,
+        event, spellLevel, message, versatile: true, isReroll: true, action: VERSATILE,
       }); break;
-    case 'formula':
-      await item.rollFormula({ event, spellLevel, message }); break;
+    case FORMULA:
+      await item.rollFormula({
+        event, spellLevel, message, action,
+      }); break;
     case 'formula-reroll':
       await item.rollFormula({
-        event, spellLevel, message, isReroll: true,
+        event, spellLevel, message, isReroll: true, action: FORMULA,
       }); break;
     case 'save': {
       const targets = this._getChatCardTargets(card);
@@ -592,7 +459,6 @@ async function _onChatCardAction(event) {
 
 export const overrideItem = () => {
   CONFIG.Item.entityClass._onChatCardAction = _onChatCardAction;
-  CONFIG.Item.entityClass.prototype.replaceButton = replaceButton;
   CONFIG.Item.entityClass.prototype.roll = rollItem;
   CONFIG.Item.entityClass.prototype.rollAttack = rollAttack;
   CONFIG.Item.entityClass.prototype.rollDamage = rollDamage;
