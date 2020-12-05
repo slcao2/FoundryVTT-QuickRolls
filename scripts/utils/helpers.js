@@ -1,5 +1,3 @@
-export const TEMPLATE_PATH_PREFIX = 'modules/quick-rolls/templates';
-
 export const ATTACK = 'attack';
 export const VANTAGE = 'vantage';
 export const DAMAGE = 'damage';

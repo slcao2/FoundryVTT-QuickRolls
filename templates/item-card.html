@@ -23,8 +23,8 @@
             </h4>
         </div>
         <div class="flexrow">
-            <button data-action="attack">{{ localize "DND5E.Attack" }}</button>
-            <button data-action="vantage">
+            <button class="qr-attack" data-action="attack">{{ localize "DND5E.Attack" }}</button>
+            <button class="qr-vantage" data-action="vantage">
                 <div title="{{localize 'QR.VantageTooltip'}}">
                     <i class="fas fa-info-circle qr-tooltip"></i>
                     {{ localize "QR.Vantage" }}
@@ -38,7 +38,7 @@
             {{ localize "DND5E.Damage" }}
         </h4>
         
-        <button data-action="damage">
+        <button class="qr-damage" data-action="damage">
             <div title="{{localize 'QR.CritTooltip'}}">
                 <i class="fas fa-info-circle qr-tooltip"></i>
                 {{#if isHealing}}{{ localize "DND5E.Healing" }}
@@ -52,7 +52,7 @@
         <h4 class="qr-card-button-header qr-versatile-header qr-hidden">
             {{ localize "DND5E.Versatile" }}
         </h4>
-        <button data-action="versatile">
+        <button class="qr-versatile" data-action="versatile">
             <div title="{{localize 'QR.CritTooltip'}}">
                 <i class="fas fa-info-circle qr-tooltip"></i>
                 {{ localize "DND5E.Versatile" }}
@@ -70,7 +70,7 @@
         <h4 class="qr-card-button-header qr-formula-header qr-hidden">
             {{ localize "DND5E.OtherFormula" }}
         </h4>
-        <button data-action="formula">
+        <button class="qr-formula" data-action="formula">
             <div title="{{localize 'QR.CritTooltip'}}">
                 <i class="fas fa-info-circle qr-tooltip"></i>
                 {{ localize "DND5E.OtherFormula"}}
