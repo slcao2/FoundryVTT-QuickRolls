@@ -39,7 +39,7 @@ async function rollAttack({
 
   // Define Roll bonuses
   const parts = ['@mod'];
-  if ((this.data.type !== 'weapon') || itemData.proficient) {
+  if (!['weapon', 'consumable'].includes(this.data.type) || itemData.proficient) {
     parts.push('@prof');
   }
 
@@ -189,13 +189,11 @@ async function rollItem({
   }
 
   // Toggle default roll mode
-  rollMode = rollMode || game.settings.get('core', 'rollMode');
-  if (['gmroll', 'blindroll'].includes(rollMode)) chatData.whisper = ChatMessage.getWhisperRecipients('GM');
-  if (rollMode === 'blindroll') chatData.blind = true;
+  ChatMessage.applyRollMode(chatData, rollMode || game.settings.get('core', 'rollMode'));
 
   // Create the chat message
   if (createMessage) {
-    const message = await ChatMessage.create(chatData);
+    const message = await ChatMessage.create(chatData, { rollMode });
 
     if (this.hasAttack) {
       toggleAllDisabledButtonState({ messageId: message.id, isDisable: true });
