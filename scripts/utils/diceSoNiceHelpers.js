@@ -1,4 +1,5 @@
 import { toggleAllDisabledButtonState } from './domUtils.js';
+import { sleep } from './utilities.js';
 
 export const DICE_SO_NICE = 'dice-so-nice';
 export const DICE_SO_NICE_IMMEDIATELY_DISPLAY_CHAT_MESSAGES = 'immediatelyDisplayChatMessages';
@@ -15,6 +16,9 @@ export const diceSoNiceShowForRoll = async ({ roll, messageId }) => {
     if (shouldImmediatelyDisplayChatMessage) {
       game.dice3d.showForRoll(roll);
     } else {
+      // needed to disabled the buttons properly
+      // https://stackoverflow.com/questions/779379/why-is-settimeoutfn-0-sometimes-useful
+      await sleep(0);
       toggleAllDisabledButtonState({ messageId, isDisable: true });
       await game.dice3d.showForRoll(roll);
       toggleAllDisabledButtonState({ messageId, isDisable: false });
