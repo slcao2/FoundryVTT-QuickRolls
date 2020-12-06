@@ -44,8 +44,6 @@ const updateChatClass = ({ node, message, action }) => {
 
       const attackTotal = parseInt(getRollTotal(attackNode), DEFAULT_RADIX);
       const vantageTotal = parseInt(getRollTotal(vantageNode), DEFAULT_RADIX);
-      debug('attackTotal', attackTotal);
-      debug('vantageTotal', vantageTotal);
 
       if (hasVantage) {
         attackNode.removeClass('qr-discarded');
@@ -85,7 +83,6 @@ export const updateButtonAndHeader = async ({
     headerText: game.i18n.localize(headerKey),
     vantageTypeHeader: flags.vantageTypeHeader,
   };
-  debug('vantageTypeHeader', flags.vantageTypeHeader);
   const headerHtml = await renderTemplate(`${TEMPLATE_PATH_PREFIX}/button-header.html`, headerTemplateData);
   const headerHtmlNode = $(headerHtml);
   replaceClassNode({ node: contentNode, targetClass: `qr-${action}-header`, replacementNode: headerHtmlNode });

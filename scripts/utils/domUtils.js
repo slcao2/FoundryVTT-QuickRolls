@@ -1,6 +1,4 @@
-/**
- * All DOM manipulation should be done on jquery nodes until the very end
- */
+import { debug } from './logger.js';
 
 export const replaceClassNode = ({ node, targetClass, replacementNode }) => {
   node.find(`.${targetClass}`).replaceWith(replacementNode);

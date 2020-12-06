@@ -216,22 +216,27 @@ async function rollItem({
       // Don't roll as a crit if it's rolling from the item
       event.altKey = false;
 
-      switch (autoRollDamage) {
-        case AUTO_ROLL_DAMAGE_DM_ONLY:
-          if (ownedOnlyByGM(this.actor)) {
-            this.data.data.level = originalSpellLevel;
-            await this.rollDamage({
-              event, spellLevel, message, action: DAMAGE,
-            });
-          }
-          break;
-        case AUTO_ROLL_DAMAGE_ALL:
-          this.data.data.level = originalSpellLevel;
-          await this.rollDamage({
-            event, spellLevel, message, action: DAMAGE,
-          });
-          break;
-        default:
+      const executeDamageRoll = async () => {
+        this.data.data.level = originalSpellLevel;
+        await this.rollDamage.bind(this)({
+          event, spellLevel, message, action: DAMAGE,
+        });
+      };
+
+      if (!this.hasAttack) {
+        await executeDamageRoll();
+      } else {
+        switch (autoRollDamage) {
+          case AUTO_ROLL_DAMAGE_DM_ONLY:
+            if (ownedOnlyByGM(this.actor)) {
+              await executeDamageRoll();
+            }
+            break;
+          case AUTO_ROLL_DAMAGE_ALL:
+            await executeDamageRoll();
+            break;
+          default:
+        }
       }
     }
 
