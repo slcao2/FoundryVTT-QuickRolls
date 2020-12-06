@@ -28,4 +28,4 @@ export const ownedOnlyByGM = (actor) => {
   return isOnlyGmOwned;
 };
 
-export const hasVantageFromEvent = (event) => event.altKey || event.ctrlKey || event.metaKey;
+export const hasVantageFromEvent = (event) => event && (event.altKey || event.ctrlKey || event.metaKey);

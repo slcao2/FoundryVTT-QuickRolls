@@ -131,7 +131,8 @@ async function rollAttack({
  * @return {Promise}
  */
 async function rollItem({
-  configureDialog = true, rollMode = null, createMessage = true, event, originalSpellLevel = null,
+  configureDialog = true, rollMode = null, createMessage = true,
+  event = { altKey: false, ctrlKey: false, metaKey: false }, originalSpellLevel = null,
 } = {}) {
   // Basic template rendering data
   const { token } = this.actor;
@@ -212,7 +213,9 @@ async function rollItem({
       const spellLevel = $(message.data.content).data('spell-level') || null;
 
       // Don't roll as a crit if it's rolling from the item
-      event.altKey = false;
+      if (event) {
+        event.altKey = false;
+      }
 
       const executeDamageRoll = async () => {
         this.data.data.level = originalSpellLevel;
