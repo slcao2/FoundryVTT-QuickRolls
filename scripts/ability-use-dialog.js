@@ -1,5 +1,3 @@
-import { DEFAULT_RADIX } from './utils/utilities.js';
-
 /**
  * A specialized Dialog subclass for ability usage
  * @type {Dialog}
@@ -36,15 +34,19 @@ export default class AbilityUseDialog extends Dialog {
     const quantity = itemData.quantity || 0;
     const recharge = itemData.recharge || {};
     const recharges = !!recharge.value;
+    const sufficientUses = (quantity > 0 && !uses.value) || uses.value > 0;
 
     // Prepare dialog form data
     const data = {
       item: item.data,
       title: game.i18n.format('DND5E.AbilityUseHint', item.data),
       note: this._getAbilityUseNote(item.data, uses, recharge),
-      hasLimitedUses: uses.max || recharges,
-      canUse: recharges ? recharge.charged : (quantity > 0 && !uses.value) || uses.value > 0,
-      hasPlaceableTemplate: game.user.can('TEMPLATE_CREATE') && item.hasAreaTarget,
+      consumeSpellSlot: false,
+      consumeRecharge: recharges,
+      consumeResource: !!itemData.consume.target,
+      consumeUses: uses.max,
+      canUse: recharges ? recharge.charged : sufficientUses,
+      createTemplate: game.user.can('TEMPLATE_CREATE') && item.hasAreaTarget,
       errors: [],
     };
     if (item.data.type === 'spell') this._getSpellData(actorData, itemData, data);
@@ -52,7 +54,7 @@ export default class AbilityUseDialog extends Dialog {
     // Render the ability usage template
     const html = await renderTemplate('systems/dnd5e/templates/apps/ability-use.html', data);
 
-    // Create the Dialog and return as a Promise
+    // Create the Dialog and return data as a Promise
     const icon = data.isSpell ? 'fa-magic' : 'fa-fist-raised';
     const label = game.i18n.localize(`DND5E.AbilityUse${data.isSpell ? 'Cast' : 'Use'}`);
     return new Promise((resolve) => {
@@ -63,7 +65,10 @@ export default class AbilityUseDialog extends Dialog {
           use: {
             icon: `<i class="fas ${icon}"></i>`,
             label,
-            callback: (_html) => resolve(new FormData(_html[0].querySelector('form'))),
+            callback: (html) => {
+              const fd = new FormDataExtended(html[0].querySelector('form'));
+              resolve(fd.toObject());
+            },
           },
         },
         default: 'use',
@@ -84,11 +89,11 @@ export default class AbilityUseDialog extends Dialog {
   static _getSpellData(actorData, itemData, data) {
     // Determine whether the spell may be up-cast
     const lvl = itemData.level;
-    const canUpcast = (lvl > 0) && CONFIG.DND5E.spellUpcastModes.includes(itemData.preparation.mode);
+    const consumeSpellSlot = (lvl > 0) && CONFIG.DND5E.spellUpcastModes.includes(itemData.preparation.mode);
 
     // If can't upcast, return early and don't bother calculating available spell slots
-    if (!canUpcast) {
-      data = mergeObject(data, { isSpell: true, canUpcast });
+    if (!consumeSpellSlot) {
+      mergeObject(data, { isSpell: true, consumeSpellSlot });
       return;
     }
 
@@ -98,8 +103,8 @@ export default class AbilityUseDialog extends Dialog {
       if (i < lvl) return arr;
       const label = CONFIG.DND5E.spellLevels[i];
       const l = actorData.spells[`spell${i}`] || { max: 0, override: null };
-      const max = parseInt(l.override || l.max || 0, DEFAULT_RADIX);
-      const slots = Math.clamped(parseInt(l.value || 0, DEFAULT_RADIX), 0, max);
+      const max = parseInt(l.override || l.max || 0);
+      const slots = Math.clamped(parseInt(l.value || 0), 0, max);
       if (max > 0) lmax = i;
       arr.push({
         level: i,
@@ -123,7 +128,7 @@ export default class AbilityUseDialog extends Dialog {
     const canCast = spellLevels.some((l) => l.hasSlots);
 
     // Return merged data
-    data = mergeObject(data, { isSpell: true, canUpcast, spellLevels });
+    data = mergeObject(data, { isSpell: true, consumeSpellSlot, spellLevels });
     if (!canCast) data.errors.push('DND5E.SpellCastNoSlots');
   }
 
@@ -162,11 +167,18 @@ export default class AbilityUseDialog extends Dialog {
     }
 
     // Other Items
+
     return game.i18n.format('DND5E.AbilityUseNormalHint', {
       type: item.type,
       value: uses.value,
       max: uses.max,
       per: CONFIG.DND5E.limitedUsePeriods[uses.per],
     });
+  }
+
+  /* -------------------------------------------- */
+
+  static _handleSubmit(formData, item) {
+
   }
 }
