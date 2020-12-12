@@ -1,5 +1,6 @@
 import { debug, error } from './utils/logger.js';
 import {
+  buildDamageRollHtmlNode,
   updateButtonAndHeader,
 } from './utils/chat.js';
 import {
@@ -267,6 +268,7 @@ async function rollDamage({
 
   // Get roll data
   const parts = itemData.damage.parts.map((d) => d[0]);
+  const types = itemData.damage.parts.map((d) => d[1]);
   const rollData = this.getRollData();
   if (spellLevel) rollData.item.level = spellLevel;
 
@@ -289,35 +291,50 @@ async function rollDamage({
   // Add damage bonus formula
   const actorBonus = getProperty(actorData, `bonuses.${itemData.actionType}`) || {};
   if (actorBonus.damage && (parseInt(actorBonus.damage, DEFAULT_RADIX) !== 0)) {
-    parts.push(actorBonus.damage);
+    parts[0] = `${parts[0]} + ${actorBonus.damage}`;
   }
 
   // Add ammunition damage
+  // if (this._ammo) {
+  //   parts.push('@ammo');
+  //   rollData.ammo = this._ammo.data.data.damage.parts.map((p) => p[0]).join('+');
+  //   delete this._ammo;
+  // }
+
   if (this._ammo) {
-    parts.push('@ammo');
-    rollData.ammo = this._ammo.data.data.damage.parts.map((p) => p[0]).join('+');
+    this._ammo.data.data.damage.parts.forEach((p) => {
+      const searchIndex = types.indexOf(p[1]);
+      if (searchIndex !== -1) {
+        parts[searchIndex] = `${parts[searchIndex] + p[0]}`;
+      } else {
+        parts.push(p[0]);
+        types.push(p[1]);
+      }
+    });
     delete this._ammo;
   }
 
   // Prepare Message Data
   if (rollData.bonus) {
-    parts.push('@bonus');
+    parts[0] = `${parts[0]} + ${rollData.bonus}`;
   }
 
   // eslint-disable-next-line max-len
   rollFlags.criticalBonusDice = itemData.actionType === 'mwak' || this.actor.getFlag('dnd5e', 'meleeCriticalDamageDice');
   const isCritical = (isNodeCritical($(message.data.content)) || event.altKey) && !event.ctrlKey;
   // Create the Roll instance
-  const damageRoll = rollArbitrary({
-    parts, rollData, isCritical, flags: rollFlags,
-  });
+  const damageRolls = parts.map((p) => rollArbitrary({
+    parts: [p], rollData, isCritical, flags: rollFlags,
+  }));
+
+  const rollNode = await buildDamageRollHtmlNode({ rolls: damageRolls, types });
 
   const headerKey = (this.isHealing && 'DND5E.Healing') || (versatile && 'DND5E.Versatile') || 'DND5E.Damage';
   await updateButtonAndHeader({
-    contentNode: $(message.data.content), roll: damageRoll, action, headerKey, message,
+    contentNode: $(message.data.content), action, headerKey, message, rollHtmlNode: rollNode, roll: damageRolls,
   });
 
-  return damageRoll;
+  return damageRolls;
 }
 
 /**
