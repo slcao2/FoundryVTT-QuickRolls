@@ -14,6 +14,7 @@ import { DEFAULT_RADIX } from './utils/utilities.js';
 import AbilityTemplate from './ability-template.js';
 import { calculateCrit, rollArbitrary, rollD20 } from './utils/roll.js';
 import { isNodeCritical, toggleAllDisabledButtonState } from './utils/domUtils.js';
+import AbilityUseDialog from './ability-use-dialog.js';
 
 /**
  * Place an attack roll using an item (weapon, feat, spell, or equipment)
@@ -50,9 +51,12 @@ async function rollAttack({
 
   // Ammunition Bonus
   delete this._ammo;
+  let ammo = null;
+  let ammoUpdate = null;
+
   const { consume } = itemData;
   if (consume?.type === 'ammo') {
-    const ammo = this.actor.items.get(consume.target);
+    ammo = this.actor.items.get(consume.target);
     if (ammo?.data) {
       const q = ammo.data.data.quantity;
       const consumeAmount = consume.amount ?? 0;
@@ -65,6 +69,11 @@ async function rollAttack({
         }
       }
     }
+
+    // Get pending ammunition update
+    const usage = this._getUsageUpdates({ consumeResource: true });
+    if (usage === false) return null;
+    ammoUpdate = usage.resourceUpdates || {};
   }
 
   rollFlags.fumble = 1;
@@ -106,11 +115,8 @@ async function rollAttack({
 
   if (attackRoll === false) return null;
 
-  // Handle resource consumption if the attack roll was made
-  if (!vantage && !isReroll) {
-    const allowed = await this._handleResourceConsumption({ isCard: false, isAttack: true });
-    if (allowed === false) return null;
-  }
+  // Commit ammunition consumption on attack rolls resource consumption if the attack roll was made
+  if (ammo && !isObjectEmpty(ammoUpdate) && !vantage && !isReroll) await ammo.update(ammoUpdate);
 
   const headerKey = (advantage > 0 && 'QR.Advantage') || (advantage < 0 && 'QR.Disadvantage') || 'DND5E.Attack';
   await updateButtonAndHeader({
@@ -121,22 +127,17 @@ async function rollAttack({
 }
 
 /**
- * Roll the item to Chat, creating a chat card which contains follow up attack or damage roll options
- * @param {boolean} [configureDialog]     Display a configuration dialog for the item roll, if applicable?
- * @param {string} [rollMode]             The roll display mode with which to display (or not) the card
- * @param {boolean} [createMessage]       Whether to automatically create a chat message (if true) or simply return
- *                                        the prepared chat message data (if false).
- * @param {MouseEvent} [event]            An event which triggered this roll, if any
- * @param {number} [originalSpellLevel]   The original spell level if the roll is a spell roll that is upcast
- * @return {Promise}
- */
-async function rollItem({
-  configureDialog = true, rollMode = null, createMessage = true,
-  event = { altKey: false, ctrlKey: false, metaKey: false }, originalSpellLevel = null,
+   * Display the chat card for an Item as a Chat Message
+   * @param {object} options          Options which configure the display of the item chat card
+   * @param {string} rollMode         The message visibility mode to apply to the created card
+   * @param {boolean} createMessage   Whether to automatically create a ChatMessage entity (if true), or only return
+   *                                  the prepared message data (if false)
+   */
+async function displayCard({
+  event = { altKey: false, ctrlKey: false, metaKey: false }, rollMode, createMessage = true,
 } = {}) {
   // Basic template rendering data
   const { token } = this.actor;
-
   const templateData = {
     actor: this.actor,
     tokenId: token ? `${token.scene._id}.${token.id}` : null,
@@ -152,44 +153,27 @@ async function rollItem({
     hasAreaTarget: this.hasAreaTarget,
   };
 
-  // For feature items, optionally show an ability usage dialog
-  if (this.data.type === 'feat') {
-    const configured = await this._rollFeat(configureDialog);
-    if (configured === false) return;
-  } else if (this.data.type === 'consumable') {
-    const configured = await this._rollConsumable(configureDialog);
-    if (configured === false) return;
-  }
-
-  // For items which consume a resource, handle that here
-  const allowed = await this._handleResourceConsumption({ isCard: true, isAttack: false });
-  if (allowed === false) return;
-
   // Render the chat card template
   const templateType = ['tool'].includes(this.data.type) ? this.data.type : 'item';
   const template = `${TEMPLATE_PATH_PREFIX}/${templateType}-card.html`;
   const html = await renderTemplate(template, templateData);
 
-  // Basic chat message data
+  // Create the ChatMessage data object
   const chatData = {
     user: game.user._id,
     type: CONST.CHAT_MESSAGE_TYPES.OTHER,
     content: html,
     flavor: this.data.data.chatFlavor || this.name,
-    speaker: {
-      actor: this.actor._id,
-      token: this.actor.token,
-      alias: this.actor.name,
-    },
+    speaker: ChatMessage.getSpeaker({ actor: this.actor, token }),
     flags: { 'core.canPopout': true },
   };
 
-  // If the consumable was destroyed in the process - embed the item data in the surviving message
+  // If the Item was destroyed in the process of displaying its card - embed the item data in the chat message
   if ((this.data.type === 'consumable') && !this.actor.items.has(this.id)) {
     chatData.flags['dnd5e.itemData'] = this.data;
   }
 
-  // Toggle default roll mode
+  // Apply the roll mode to adjust message visibility
   ChatMessage.applyRollMode(chatData, rollMode || game.settings.get('core', 'rollMode'));
 
   // Create the chat message
@@ -218,7 +202,7 @@ async function rollItem({
       }
 
       const executeDamageRoll = async () => {
-        this.data.data.level = originalSpellLevel;
+        // this.data.data.level = originalSpellLevel;
         await this.rollDamage.bind(this)({
           event, spellLevel, message, action: DAMAGE,
         });
@@ -246,6 +230,89 @@ async function rollItem({
     return message;
   }
   return chatData;
+}
+
+/**
+ * Roll the item to Chat, creating a chat card which contains follow up attack or damage roll options
+ * @param {boolean} [configureDialog]     Display a configuration dialog for the item roll, if applicable?
+ * @param {string} [rollMode]             The roll display mode with which to display (or not) the card
+ * @param {boolean} [createMessage]       Whether to automatically create a chat message (if true) or simply return
+ *                                        the prepared chat message data (if false).
+ * @return {Promise<ChatMessage|object|void>}
+ */
+async function roll({
+  event, configureDialog = true, rollMode, createMessage = true,
+} = {}) {
+  let item = this;
+  const { actor } = this;
+
+  // Reference aspects of the item data necessary for usage
+  const id = this.data.data; // Item data
+  const hasArea = this.hasAreaTarget; // Is the ability usage an AoE?
+  const resource = id.consume || {}; // Resource consumption
+  const recharge = id.recharge || {}; // Recharge mechanic
+  const uses = id?.uses ?? {}; // Limited uses
+  const isSpell = this.type === 'spell'; // Does the item require a spell slot?
+  const requireSpellSlot = isSpell && (id.level > 0) && CONFIG.DND5E.spellUpcastModes.includes(id.preparation.mode);
+
+  // Define follow-up actions resulting from the item usage
+  let createMeasuredTemplate = hasArea; // Trigger a template creation
+  let consumeRecharge = !!recharge.value; // Consume recharge
+  let consumeResource = !!resource.target && (resource.type !== 'ammo'); // Consume a linked (non-ammo) resource
+  let consumeSpellSlot = requireSpellSlot; // Consume a spell slot
+  let consumeUsage = !!uses.per; // Consume limited uses
+  const consumeQuantity = uses.autoDestroy; // Consume quantity of the item in lieu of uses
+
+  // Display a configuration dialog to customize the usage
+  const needsConfiguration = createMeasuredTemplate || consumeRecharge
+    || consumeResource || consumeSpellSlot || consumeUsage;
+  if (configureDialog && needsConfiguration) {
+    const configuration = await AbilityUseDialog.create(this);
+    if (!configuration) return;
+
+    // Determine consumption preferences
+    createMeasuredTemplate = Boolean(configuration.placeTemplate);
+    consumeUsage = Boolean(configuration.consumeUse);
+    consumeRecharge = Boolean(configuration.consumeRecharge);
+    consumeResource = Boolean(configuration.consumeResource);
+    consumeSpellSlot = Boolean(configuration.consumeSlot);
+
+    // Handle spell upcasting
+    if (requireSpellSlot) {
+      const slotLevel = configuration.level;
+      const spellLevel = slotLevel === 'pact' ? actor.data.data.spells.pact.level : parseInt(slotLevel, DEFAULT_RADIX);
+      if (spellLevel !== id.level) {
+        const upcastData = mergeObject(this.data, { 'data.level': spellLevel }, { inplace: false });
+        item = this.constructor.createOwned(upcastData, actor); // Replace the item with an upcast version
+      }
+      if (consumeSpellSlot) consumeSpellSlot = slotLevel === 'pact' ? 'pact' : `spell${spellLevel}`;
+    }
+  }
+
+  // Determine whether the item can be used by testing for resource consumption
+  const usage = item._getUsageUpdates({
+    consumeRecharge, consumeResource, consumeSpellSlot, consumeUsage, consumeQuantity,
+  });
+  if (!usage) return;
+  const { actorUpdates, itemUpdates, resourceUpdates } = usage;
+
+  // Commit pending data updates
+  if (!isObjectEmpty(itemUpdates)) await item.update(itemUpdates);
+  if (consumeQuantity && (item.data.data.quantity === 0)) await item.delete();
+  if (!isObjectEmpty(actorUpdates)) await actor.update(actorUpdates);
+  if (!isObjectEmpty(resourceUpdates)) {
+    const resource = actor.items.get(id.consume?.target);
+    if (resource) await resource.update(resourceUpdates);
+  }
+
+  // Initiate measured template creation
+  if (createMeasuredTemplate) {
+    const template = AbilityTemplate.fromItem(item);
+    if (template) template.drawPreview();
+  }
+
+  // Create or return the Chat Message data
+  return item.displayCard({ event, rollMode, createMessage });
 }
 
 /**
@@ -465,8 +532,9 @@ async function _onChatCardAction(event) {
 
 export const overrideItem = () => {
   CONFIG.Item.entityClass._onChatCardAction = _onChatCardAction;
-  CONFIG.Item.entityClass.prototype.roll = rollItem;
+  CONFIG.Item.entityClass.prototype.roll = roll;
   CONFIG.Item.entityClass.prototype.rollAttack = rollAttack;
   CONFIG.Item.entityClass.prototype.rollDamage = rollDamage;
   CONFIG.Item.entityClass.prototype.rollFormula = rollFormula;
+  CONFIG.Item.entityClass.prototype.displayCard = displayCard;
 };

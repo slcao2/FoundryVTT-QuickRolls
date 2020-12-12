@@ -35,6 +35,7 @@ module.exports = {
     game: 'writable',
     getProperty: 'readonly',
     Hooks: 'readonly',
+    isObjectEmpty: 'readonly',
     loadTemplates: 'readonly',
     mergeObject: 'readonly',
     renderTemplate: 'readonly',
