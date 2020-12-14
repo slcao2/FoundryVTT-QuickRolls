@@ -23,7 +23,8 @@
     "./scripts/utils/utilities.js",
     "./scripts/utils/diceSoNiceHelpers.js",
     "./scripts/utils/domUtils.js",
-    "./scripts/utils/roll.js"
+    "./scripts/utils/roll.js",
+    "./scripts/utils/templatePathPrefix.js"
   ],
   "styles": [
     "./styles/quick-rolls.css"
