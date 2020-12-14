@@ -64,6 +64,7 @@
   font-size: 14px;
   display: flex;
   flex-wrap: nowrap;
+  flex: none;
 }
 
 .dnd5e.chat-card .card-buttons header .part-type .part-type-icon {
