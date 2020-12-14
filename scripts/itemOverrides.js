@@ -302,8 +302,8 @@ async function roll({
   if (consumeQuantity && (item.data.data.quantity === 0)) await item.delete();
   if (!isObjectEmpty(actorUpdates)) await actor.update(actorUpdates);
   if (!isObjectEmpty(resourceUpdates)) {
-    const resource = actor.items.get(id.consume?.target);
-    if (resource) await resource.update(resourceUpdates);
+    const resourceVal = actor.items.get(id.consume?.target);
+    if (resourceVal) await resourceVal.update(resourceUpdates);
   }
 
   // Initiate measured template creation
@@ -361,18 +361,11 @@ async function rollDamage({
     parts[0] = `${parts[0]} + ${actorBonus.damage}`;
   }
 
-  // Add ammunition damage
-  // if (this._ammo) {
-  //   parts.push('@ammo');
-  //   rollData.ammo = this._ammo.data.data.damage.parts.map((p) => p[0]).join('+');
-  //   delete this._ammo;
-  // }
-
   if (this._ammo) {
     this._ammo.data.data.damage.parts.forEach((p) => {
       const searchIndex = types.indexOf(p[1]);
       if (searchIndex !== -1) {
-        parts[searchIndex] = `${parts[searchIndex] + p[0]}`;
+        parts[searchIndex] = `${parts[searchIndex]} + ${p[0]}`;
       } else {
         parts.push(p[0]);
         types.push(p[1]);

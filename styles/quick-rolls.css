@@ -46,8 +46,8 @@
   text-align: unset;
   border: unset;
   font-size: 14px;
-  padding-left: 3px;
-  flex: 2;
+  margin-left: 3px;
+  flex: 1;
 }
 
 .dnd5e.chat-card .card-buttons header .part-total {
@@ -57,18 +57,30 @@
 
 .dnd5e.chat-card .card-buttons header .part-type {
   text-align: right;
-  padding-right: 10px;
+  margin-right: 10px;
   border: 0px;
   font-style: italic;
   font-weight: bold;
   font-size: 14px;
+  display: flex;
+  flex-wrap: nowrap;
+}
+
+.dnd5e.chat-card .card-buttons header .part-type .part-type-icon {
+  flex: 1;
+  line-height: 2;
+  margin-right: 3px;
+}
+
+.qr-none-damage-type {
+  color: #333333;
 }
 
 .qr-acid-damage-type {
   color: #009900;
 }
 
-.qr-blugeoning-damage-type {
+.qr-bludgeoning-damage-type {
   color: #333333;
 }
 
@@ -81,15 +93,15 @@
 }
 
 .qr-force-damage-type {
-  color: #333333;
+  color: #635766;
 }
 
 .qr-lightning-damage-type {
-  color: #333333;
+  color: #909000;
 }
 
 .qr-necrotic-damage-type {
-  color: #333333;
+  color: #000000;
 }
 
 .qr-piercing-damage-type {
@@ -101,11 +113,11 @@
 }
 
 .qr-psychic-damage-type {
-  color: #333333;
+  color: #900090;
 }
 
 .qr-radiant-damage-type {
-  color: #333333;
+  color: #995500;
 }
 
 .qr-slashing-damage-type {
@@ -113,17 +125,13 @@
 }
 
 .qr-thunder-damage-type {
-  color: #333333;
+  color: #454500;
 }
 
 .qr-healing-damage-type {
-  color: #333333;
+  color: #ff0000;
 }
 
 .qr-temphp-damage-type {
-  color: #333333;
-}
-
-.qr-none-damage-type {
-  color: #333333;
+  color: #0000ff;
 }

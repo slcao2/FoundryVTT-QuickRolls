@@ -75,8 +75,21 @@ export const buildDamageRollHtmlNode = async ({ rolls, types }) => {
   const typeIconMap = {
     none: 'ban',
     acid: 'vial',
+    bludgeoning: 'hammer',
+    cold: 'snowflake',
+    fire: 'fire',
+    force: 'hand-paper',
+    lightning: 'bolt',
+    necrotic: 'skull',
+    piercing: 'long-arrow-alt-right',
+    poison: 'skull-crossbones',
+    psychic: 'brain',
+    radiant: 'sun',
+    slashing: 'slash',
+    thunder: 'volume-up',
+    healing: 'plus',
+    temphp: 'shield-alt',
   };
-  debug('types', types);
   const min = 1;
   const templateData = {
     diceFormula: rolls.map((roll) => roll.formula).join(' + '),

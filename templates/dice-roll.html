@@ -6,7 +6,10 @@
       <div class="dice">
         <header class="part-header flexrow">
           <span class="part-formula">{{this.formula}}</span>
-          <span class="part-type qr-{{this.type}}-damage-type"><i class="fas fa-{{this.typeIcon}}"></i>{{this.type}}</span>
+          <span class="part-type qr-{{this.type}}-damage-type">
+            <i class="part-type-icon fas fa-{{this.typeIcon}}"></i>
+            {{this.type}}
+          </span>
           <span class="part-total">{{this.total}}</span>
         </header>
         <ol class="dice-rolls">
