@@ -117,7 +117,7 @@ export const updateButtonAndHeader = async ({
   contentNode, roll, rollHtmlNode = null, action, headerKey, message, flags = {},
 }) => {
   if (Array.isArray(roll)) {
-    await Promise.all(roll);
+    await Promise.all(roll.map((r) => diceSoNiceShowForRoll({ roll: r, messageId: message.id })));
   } else {
     await diceSoNiceShowForRoll({ roll, messageId: message.id });
   }
