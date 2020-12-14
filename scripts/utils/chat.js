@@ -1,6 +1,8 @@
 import { diceSoNiceShowForRoll } from './diceSoNiceHelpers.js';
 import { getRollTotal, nodeToHtml, replaceClassNode } from './domUtils.js';
-import { ATTACK, VANTAGE } from './helpers.js';
+import {
+  ATTACK, DAMAGE, VANTAGE, VERSATILE,
+} from './helpers.js';
 import { debug } from './logger.js';
 import { TEMPLATE_PATH_PREFIX } from './templatePathPrefix.js';
 import { DEFAULT_RADIX } from './utilities.js';
@@ -68,14 +70,65 @@ const updateChatClass = ({ node, message, action }) => {
   }
 };
 
-export const updateButtonAndHeader = async ({
-  contentNode, roll, action, headerKey, message, flags = {},
-}) => {
-  await diceSoNiceShowForRoll({ roll, messageId: message.id });
+export const buildDamageRollHtmlNode = async ({ rolls, types }) => {
+  const NONE = 'none';
+  const typeIconMap = {
+    none: 'ban',
+    acid: 'vial',
+    bludgeoning: 'hammer',
+    cold: 'snowflake',
+    fire: 'fire',
+    force: 'hand-paper',
+    lightning: 'bolt',
+    necrotic: 'skull',
+    piercing: 'long-arrow-alt-right',
+    poison: 'skull-crossbones',
+    psychic: 'brain',
+    radiant: 'sun',
+    slashing: 'slash',
+    thunder: 'volume-up',
+    healing: 'plus',
+    temphp: 'shield-alt',
+  };
+  const min = 1;
+  const templateData = {
+    diceFormula: rolls.map((roll) => roll.formula).join(' + '),
+    rolls: rolls.map((roll, index) => ({
+      formula: roll.formula,
+      type: types[index] || NONE,
+      typeIcon: typeIconMap[types[index] || NONE],
+      total: roll.total,
+      roll: roll.dice.map((die) => die.results.map((r) => (
+        {
+          diceSize: die.faces,
+          result: r.result,
+          isMin: r.result === min,
+          isMax: r.result === die.faces,
+          isDiscarded: !r.active,
+        }
+      ))).flat(),
+    })),
+    total: rolls.reduce((acc, r) => acc + r.total, 0),
+  };
+  const node = await renderTemplate(`${TEMPLATE_PATH_PREFIX}/dice-roll.html`, templateData);
+  return $(node);
+};
 
-  const rollHtml = await roll.render();
-  const rollHtmlNode = $(rollHtml);
-  updateRollClass({ action, rollNode: rollHtmlNode, flags: { isCritical: roll.isCritical, isFumble: roll.isFumble } });
+export const updateButtonAndHeader = async ({
+  contentNode, roll, rollHtmlNode = null, action, headerKey, message, flags = {},
+}) => {
+  if (Array.isArray(roll)) {
+    await Promise.all(roll.map((r) => diceSoNiceShowForRoll({ roll: r, messageId: message.id })));
+  } else {
+    await diceSoNiceShowForRoll({ roll, messageId: message.id });
+  }
+
+  if (!rollHtmlNode) {
+    const rollHtml = await roll.render();
+    rollHtmlNode = $(rollHtml);
+  }
+
+  updateRollClass({ action, rollNode: rollHtmlNode, flags: { isCritical: roll?.isCritical, isFumble: roll?.isFumble } });
   replaceClassNode({ node: contentNode, targetClass: `qr-${action}`, replacementNode: rollHtmlNode });
 
   const headerTemplateData = {

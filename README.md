@@ -34,6 +34,8 @@ You can install this module in a couple different ways outlined below.
 ![Attack Highlighting](https://raw.githubusercontent.com/slcao2/FoundryVTT-QuickRolls/main/screenshots/attack-highlighting.jpg)
 * Reroll a roll on the item card by clicking the redo button.
 ![Reroll](https://raw.githubusercontent.com/slcao2/FoundryVTT-QuickRolls/main/screenshots/reroll.gif)
+* Damage type display on roll expansion.  
+![Damage Type Display](https://raw.githubusercontent.com/slcao2/FoundryVTT-QuickRolls/main/screenshots/damage-types.png)
 
 ### Automatic Crit Calculation
 * A setting can be enabled to roll either the default dnd5e critical calculation or roll with the crit die as the max amount.

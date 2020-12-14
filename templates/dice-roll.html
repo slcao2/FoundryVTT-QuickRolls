@@ -1,0 +1,25 @@
+<div class="dice-roll {{#if action}}qr-{{action}}{{/if}}">
+  <div class="dice-result">
+    <div class="dice-formula">{{diceFormula}}</div>
+    <div class="dice-tooltip">
+      {{#each rolls}}
+      <div class="dice">
+        <header class="part-header flexrow">
+          <span class="part-formula">{{this.formula}}</span>
+          <span class="part-type qr-{{this.type}}-damage-type">
+            <i class="part-type-icon fas fa-{{this.typeIcon}}"></i>
+            {{this.type}}
+          </span>
+          <span class="part-total">{{this.total}}</span>
+        </header>
+        <ol class="dice-rolls">
+          {{#each this.roll}}
+          <li class="roll die d{{this.diceSize}}{{#if this.isMin}} min{{/if}}{{#if this.isMax}} max{{/if}}{{#if this.isDiscarded}} discarded{{/if}}">{{this.result}}</li>
+          {{/each}}
+        </ol>
+      </div>
+      {{/each}}
+    </div>
+    <h4 class="dice-total">{{total}}</h4>
+  </div>
+</div>
