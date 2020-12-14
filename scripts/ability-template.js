@@ -9,12 +9,6 @@ export default class AbilityTemplate extends MeasuredTemplate {
    * @return {AbilityTemplate|null}     The template object, or null if the item does not produce a template
    */
   static fromItem(item) {
-    // TODO: I can already see the tech debt nightmare piling up...will find a better solution later.
-    /**
-     * Map the subset of target types which produce a template area of effect
-     * The keys are DND5E target types and the values are MeasuredTemplate shape types
-     * @type {Object}
-     */
     const areaTargetTypes = {
       cone: 'cone',
       cube: 'rect',
@@ -25,7 +19,6 @@ export default class AbilityTemplate extends MeasuredTemplate {
       square: 'rect',
       wall: 'ray',
     };
-
     const target = getProperty(item.data, 'data.target') || {};
     const templateShape = areaTargetTypes[target.type];
     if (!templateShape) return null;
@@ -59,7 +52,10 @@ export default class AbilityTemplate extends MeasuredTemplate {
     }
 
     // Return the template constructed from the item data
-    return new this(templateData);
+    const template = new this(templateData);
+    template.item = item;
+    template.actorSheet = item.actor?.sheet || null;
+    return template;
   }
 
   /* -------------------------------------------- */
@@ -69,9 +65,16 @@ export default class AbilityTemplate extends MeasuredTemplate {
    */
   drawPreview() {
     const initialLayer = canvas.activeLayer;
+
+    // Draw the template and switch to the template layer
     this.draw();
     this.layer.activate();
     this.layer.preview.addChild(this);
+
+    // Hide the sheet that originated the preview
+    if (this.actorSheet) this.actorSheet.minimize();
+
+    // Activate interactivity
     this.activatePreviewListeners(initialLayer);
   }
 
@@ -106,6 +109,7 @@ export default class AbilityTemplate extends MeasuredTemplate {
       canvas.app.view.oncontextmenu = null;
       canvas.app.view.onwheel = null;
       initialLayer.activate();
+      this.actorSheet.maximize();
     };
 
     // Confirm the workflow (left-click)

@@ -1,6 +1,6 @@
 import { registerSettings } from './settings.js';
 import { overrideItem } from './itemOverrides.js';
-import { overrideActorSetup, overrideActor } from './actorOverrides.js';
+import { overrideActor } from './actorOverrides.js';
 import { TEMPLATE_PATH_PREFIX } from './utils/templatePathPrefix.js';
 
 const preloadTemplates = () => {
@@ -19,7 +19,6 @@ Hooks.on('init', () => {
 
 Hooks.on('setup', () => {
   overrideItem();
-  overrideActorSetup();
 });
 
 Hooks.on('ready', () => {
