@@ -19,36 +19,7 @@ You can install this module in a couple different ways outlined below.
 * You can either clone the repo or download a zip archive from the tags.
 
 ## Features
-### In-Card Item Roll
-* Rolling an item from a character sheet will automatically do an attack roll if it has it.
-![Item Card Attack Roll](https://raw.githubusercontent.com/slcao2/FoundryVTT-QuickRolls/main/screenshots/item-roll-attack.gif)
-* Buttons on the card will also be replaced when with the actual roll result as they are rolled for attack/damage/versatile/formula rolls.
-![Item Card Button Roll](https://raw.githubusercontent.com/slcao2/FoundryVTT-QuickRolls/main/screenshots/item-roll-buttons.gif)
-* Alt clicking the item roll will automatically roll the item with advantage. Similarly, ctrl clicking will automatically roll with disadvantage.
-![Item Card Vantage](https://raw.githubusercontent.com/slcao2/FoundryVTT-QuickRolls/main/screenshots/item-roll-vantage.gif)
-* The (dis)advantage button will automatically roll with advantage if clicked. Ctrl clicking will roll with disadvantage.
-![Item Card Vantage Button](https://raw.githubusercontent.com/slcao2/FoundryVTT-QuickRolls/main/screenshots/item-roll-vantage-button.gif)
-* Alt clicking will roll damage with critical damage.
-![Item Card Critical Override](https://raw.githubusercontent.com/slcao2/FoundryVTT-QuickRolls/main/screenshots/item-roll-crit-override.gif)
-* Advantage/Disadvantage is highlighted properly on the card.  
-![Attack Highlighting](https://raw.githubusercontent.com/slcao2/FoundryVTT-QuickRolls/main/screenshots/attack-highlighting.jpg)
-* Reroll a roll on the item card by clicking the redo button.
-![Reroll](https://raw.githubusercontent.com/slcao2/FoundryVTT-QuickRolls/main/screenshots/reroll.gif)
-* Damage type display on roll expansion.  
-![Damage Type Display](https://raw.githubusercontent.com/slcao2/FoundryVTT-QuickRolls/main/screenshots/damage-types.png)
-
-### Automatic Crit Calculation
-* A setting can be enabled to roll either the default dnd5e critical calculation or roll with the crit die as the max amount.
-* If the attack roll is a critical, the damage will automatically be rolled as a critical. Ctrl clicking the damage button will do a normal attack instead of critical.
-![Crit Auto](https://raw.githubusercontent.com/slcao2/FoundryVTT-QuickRolls/main/screenshots/crit-auto.gif)
-
-### Automatic Damage Rolls
-* You can set the damage roll to automatically roll for no one, GM-only owned actors, or all actors.
-![Auto Damage](https://raw.githubusercontent.com/slcao2/FoundryVTT-QuickRolls/main/screenshots/auto-damage.gif)
-
-### Dice So Nice Integration
-* Rolls show the Dice So Nice animation as they are rolled.
-* The result will wait to be displayed on the card if the immediatelyDisplayChatMessages setting is false.
+[List of Features](https://github.com/slcao2/FoundryVTT-QuickRolls/wiki/Features)
 
 ## Compatabilities
 Anything that overrides the overriden functions in overrideItem, overrideActor, or overrideActorSetup will likely be incompatible.
