@@ -110,7 +110,7 @@ export const buildDamageRollHtmlNode = async ({ rolls, types }) => {
     })),
     total: rolls.reduce((acc, r) => acc + r.total, 0),
   };
-  const node = await renderTemplate(`${TEMPLATE_PATH_PREFIX}/dice-roll.html`, templateData);
+  const node = await renderTemplate(`${TEMPLATE_PATH_PREFIX}/damage-roll.html`, templateData);
   return $(node);
 };
 

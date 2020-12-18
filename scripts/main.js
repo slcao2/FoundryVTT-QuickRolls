@@ -8,6 +8,7 @@ const preloadTemplates = () => {
     `${TEMPLATE_PATH_PREFIX}/item-card.html`,
     `${TEMPLATE_PATH_PREFIX}/tool-card.html`,
     `${TEMPLATE_PATH_PREFIX}/button-header.html`,
+    `${TEMPLATE_PATH_PREFIX}/damage-roll.html`,
   ];
   return loadTemplates(templatePaths);
 };
