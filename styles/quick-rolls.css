@@ -73,6 +73,26 @@
   margin-right: 3px;
 }
 
+.dnd5e.chat-card .qr-card-check-buttons button {
+  font-size: 12px;
+  height: 24px;
+  line-height: 20px;
+  margin: 2px 0;
+}
+
+.dnd5e.chat-card .qr-card-check-buttons {
+  border-top: none;
+}
+
+.dnd5e.chat-card .qr-check-card-header img {
+  flex: 0 0 24px;
+}
+
+.dnd5e.chat-card .qr-check-card-header h3 {
+  line-height: 24px;
+}
+
+/* Damage Types */
 .qr-none-damage-type {
   color: #333333;
 }

@@ -4,6 +4,11 @@ export const DAMAGE = 'damage';
 export const VERSATILE = 'versatile';
 export const FORMULA = 'formula';
 
+export const ROLL = 'roll';
+export const ABILITY = 'ability';
+export const SAVE = 'save';
+export const SKILL = 'skill';
+
 const PERMISSION_OWNER = 3;
 
 const getGMUsers = () => {

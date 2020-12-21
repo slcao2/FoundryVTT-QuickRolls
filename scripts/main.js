@@ -1,7 +1,10 @@
 import { registerSettings } from './settings.js';
 import { overrideItem } from './itemOverrides.js';
-import { overrideActor } from './actorOverrides.js';
+import { overrideActorEntity, overrideActorSheet } from './actorOverrides.js';
 import { TEMPLATE_PATH_PREFIX } from './utils/templatePathPrefix.js';
+
+// Import DND5E System files
+import Actor5e from '../../../systems/dnd5e/module/actor/entity.js';
 
 const preloadTemplates = () => {
   const templatePaths = [
@@ -19,8 +22,12 @@ Hooks.on('init', () => {
 
 Hooks.on('setup', () => {
   overrideItem();
+  overrideActorEntity();
 });
 
 Hooks.on('ready', () => {
-  overrideActor();
+  overrideActorSheet();
 });
+
+Hooks.on('renderChatLog', (app, html, data) => Actor5e.chatListeners(html));
+Hooks.on('renderChatPopout', (app, html, data) => Actor5e.chatListeners(html));

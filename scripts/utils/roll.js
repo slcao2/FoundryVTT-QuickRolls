@@ -21,7 +21,10 @@ export const rollD20 = ({
     modifiers += 'kh';
   }
 
-  const formula = `${numberOfDice}d20${modifiers}`;
+  let formula = `${numberOfDice}d20${modifiers}`;
+  if (flags.reliableTalent) {
+    formula = `{${formula},10}kh`;
+  }
 
   parts.unshift(formula);
 

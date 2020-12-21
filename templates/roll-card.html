@@ -1,0 +1,27 @@
+<div class="dnd5e chat-card item-card" data-actor-id="{{actor._id}}"{{#if tokenId}} data-token-id="{{tokenId}}"{{/if}}
+    {{#if checkId}} data-check-id="{{checkId}}"{{/if}}{{#if checkType}} data-check-type="{{checkType}}"{{/if}}>
+    <header class="card-header flexrow qr-check-card-header">
+        <img src="{{img}}" title="{{name}}" width="24" height="24"/>
+        <h3 class="check-name">{{titleText}}</h3>
+    </header>
+
+    <div class="qr-card-check-buttons qr-card-buttons">
+        <div class="flexrow">
+            <h4 class="qr-card-button-header qr-attack-header qr-hidden">
+                {{ localize "QR.Roll" }}
+            </h4>
+            <h4 class="qr-card-button-header qr-vantage-header qr-hidden">
+                {{ localize "QR.Vantage" }}
+            </h4>
+        </div>
+        <div class="flexrow">
+            <button class="qr-attack" data-action="attack">{{ localize "QR.Roll" }}</button>
+            <button class="qr-vantage" data-action="vantage">
+                <div title="{{localize 'QR.VantageTooltip'}}">
+                    <i class="fas fa-info-circle qr-tooltip"></i>
+                    {{ localize "QR.Vantage" }}
+                </div>
+            </button>
+        </div>
+    </div>
+</div>

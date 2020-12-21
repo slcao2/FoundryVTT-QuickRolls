@@ -15,8 +15,6 @@
     "./scripts/itemOverrides.js",
     "./scripts/actorOverrides.js",
     "./scripts/settings.js",
-    "./scripts/ability-use-dialog.js",
-    "./scripts/ability-template.js",
     "./scripts/utils/logger.js",
     "./scripts/utils/chat.js",
     "./scripts/utils/helpers.js",

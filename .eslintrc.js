@@ -40,6 +40,7 @@ module.exports = {
     mergeObject: 'readonly',
     renderTemplate: 'readonly',
     Roll: 'readonly',
+    Token: 'readonly',
     ui: 'readonly',
   },
 };
