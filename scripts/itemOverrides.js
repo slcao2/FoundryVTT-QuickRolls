@@ -12,10 +12,12 @@ import {
 } from './utils/helpers.js';
 import { TEMPLATE_PATH_PREFIX } from './utils/templatePathPrefix.js';
 import { DEFAULT_RADIX } from './utils/utilities.js';
-import AbilityTemplate from './ability-template.js';
 import { calculateCrit, rollArbitrary, rollD20 } from './utils/roll.js';
 import { isNodeCritical, toggleAllDisabledButtonState } from './utils/domUtils.js';
-import AbilityUseDialog from './ability-use-dialog.js';
+
+// Import DND5E System files
+import AbilityTemplate from '../../../systems/dnd5e/module/pixi/ability-template.js';
+import AbilityUseDialog from '../../../systems/dnd5e/module/apps/ability-use-dialog.js';
 
 /**
  * Place an attack roll using an item (weapon, feat, spell, or equipment)
@@ -128,12 +130,12 @@ async function rollAttack({
 }
 
 /**
-   * Display the chat card for an Item as a Chat Message
-   * @param {object} options          Options which configure the display of the item chat card
-   * @param {string} rollMode         The message visibility mode to apply to the created card
-   * @param {boolean} createMessage   Whether to automatically create a ChatMessage entity (if true), or only return
-   *                                  the prepared message data (if false)
-   */
+ * Display the chat card for an Item as a Chat Message
+ * @param {object} options          Options which configure the display of the item chat card
+ * @param {string} rollMode         The message visibility mode to apply to the created card
+ * @param {boolean} createMessage   Whether to automatically create a ChatMessage entity (if true), or only return
+ *                                  the prepared message data (if false)
+ */
 async function displayCard({
   event = { altKey: false, ctrlKey: false, metaKey: false }, rollMode, createMessage = true,
 } = {}) {
@@ -418,27 +420,27 @@ async function rollFormula({
   if (spellLevel) rollData.item.level = spellLevel;
 
   // Invoke the roll and submit it to chat
-  let roll = new Roll(rollData.item.formula, rollData);
+  let formulaRoll = new Roll(rollData.item.formula, rollData);
   if ((isNodeCritical($(message.data.content)) || event.altKey) && !event.ctrlKey) {
-    roll = calculateCrit({
-      parts: [rollData.item.formula], rollData, roll, criticalMultiplier: 2, criticalBonusDice: 0,
+    formulaRoll = calculateCrit({
+      parts: [rollData.item.formula], rollData, roll: formulaRoll, criticalMultiplier: 2, criticalBonusDice: 0,
     });
   }
 
   try {
-    roll = roll.roll();
+    formulaRoll = formulaRoll.roll();
   } catch (err) {
     error(err);
     ui.notifications.error(`Dice roll evaluation failed: ${err.message}`);
-    roll = null;
+    formulaRoll = null;
   }
 
   const headerKey = 'DND5E.OtherFormula';
   await updateButtonAndHeader({
-    contentNode: $(message.data.content), roll, action, headerKey, message,
+    contentNode: $(message.data.content), roll: formulaRoll, action, headerKey, message,
   });
 
-  return roll;
+  return formulaRoll;
 }
 
 /**
