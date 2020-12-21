@@ -9,6 +9,7 @@ import { TEMPLATE_PATH_PREFIX } from './utils/templatePathPrefix.js';
 
 // Import DND5E System files
 import { DND5E } from '../../../systems/dnd5e/module/config.js';
+import { isTidy5eSheetActive } from './utils/tidy5eHelpers.js';
 
 /**
  * Handle rolling of an item from the Actor sheet, obtaining the Item instance and dispatching to it's roll method
@@ -366,19 +367,22 @@ function rollSkill(skill, options = {}) {
 function activateListeners(html) {
   this.originalActivateListeners(html);
 
-  // Modificator Ability Check
-  html.find('.ability-mod').click(async (event) => {
-    event.preventDefault();
-    const { ability } = event.currentTarget.parentElement.parentElement.dataset;
-    this.actor.rollAbilityTest(ability, { event });
-  });
+  // Only activate listeners for non-tidy5e sheets
+  if (!isTidy5eSheetActive(html)) {
+    // Modificator Ability Check
+    html.find('.ability-mod').click(async (event) => {
+      event.preventDefault();
+      const { ability } = event.currentTarget.parentElement.parentElement.dataset;
+      this.actor.rollAbilityTest(ability, { event });
+    });
 
-  // Modificator Ability Saving Throw
-  html.find('.ability-save').click(async (event) => {
-    event.preventDefault();
-    const { ability } = event.currentTarget.parentElement.parentElement.dataset;
-    this.actor.rollAbilitySave(ability, { event });
-  });
+    // Modificator Ability Saving Throw
+    html.find('.ability-save').click(async (event) => {
+      event.preventDefault();
+      const { ability } = event.currentTarget.parentElement.parentElement.dataset;
+      this.actor.rollAbilitySave(ability, { event });
+    });
+  }
 }
 
 export const overrideActorEntity = () => {
