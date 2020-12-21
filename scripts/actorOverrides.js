@@ -1,7 +1,7 @@
 import { updateButtonAndHeader } from './utils/chat.js';
 import { toggleAllDisabledButtonState } from './utils/domUtils.js';
 import {
-  ABILITY, ATTACK, hasVantageFromEvent, ROLL, SAVE, SKILL, VANTAGE,
+  ABILITY, ATTACK, hasVantageFromEvent, SAVE, SKILL, VANTAGE,
 } from './utils/helpers.js';
 import { debug } from './utils/logger.js';
 import { rollD20 } from './utils/roll.js';
@@ -53,7 +53,7 @@ function _getChatCardActor(card) {
 function _onRollSkillCheck(event) {
   event.preventDefault();
   const { skill } = event.currentTarget.parentElement.dataset;
-  this.actor.rollSkillOrAbility(skill, { event }, SKILL);
+  this.actor.rollSkill(skill, { event });
 }
 
 /**
@@ -70,11 +70,11 @@ function rollAbility(abilityId, options = {}) {
     buttons: {
       test: {
         label: game.i18n.localize('DND5E.ActionAbil'),
-        callback: () => this.rollSkillOrAbility(abilityId, options, ABILITY),
+        callback: () => this.rollAbilityTest(abilityId, options),
       },
       save: {
         label: game.i18n.localize('DND5E.ActionSave'),
-        callback: () => this.rollSkillOrAbility(abilityId, options, SAVE),
+        callback: () => this.rollAbilitySave(abilityId, options),
       },
     },
   }).render(true);
@@ -345,9 +345,39 @@ async function rollCheck({
   return checkRoll;
 }
 
-function rollSkillOrAbility(id, options = {}, type) {
+function rollAbilityTest(ability, options = {}) {
   displayCard.bind(this)({
-    event: options.event, createMessage: true, id, type,
+    event: options.event, createMessage: true, id: ability, type: ABILITY,
+  });
+}
+
+function rollAbilitySave(ability, options = {}) {
+  displayCard.bind(this)({
+    event: options.event, createMessage: true, id: ability, type: SAVE,
+  });
+}
+
+function rollSkill(skill, options = {}) {
+  displayCard.bind(this)({
+    event: options.event, createMessage: true, id: skill, type: SKILL,
+  });
+}
+
+function activateListeners(html) {
+  this.originalActivateListeners(html);
+
+  // Modificator Ability Check
+  html.find('.ability-mod').click(async (event) => {
+    event.preventDefault();
+    const { ability } = event.currentTarget.parentElement.parentElement.dataset;
+    this.actor.rollAbilityTest(ability, { event });
+  });
+
+  // Modificator Ability Saving Throw
+  html.find('.ability-save').click(async (event) => {
+    event.preventDefault();
+    const { ability } = event.currentTarget.parentElement.parentElement.dataset;
+    this.actor.rollAbilitySave(ability, { event });
   });
 }
 
@@ -356,13 +386,19 @@ export const overrideActorEntity = () => {
   CONFIG.Actor.entityClass._onChatCardAction = _onChatCardAction;
   CONFIG.Actor.entityClass.chatListeners = chatListeners;
 
-  CONFIG.Actor.entityClass.prototype.rollSkillOrAbility = rollSkillOrAbility;
   CONFIG.Actor.entityClass.prototype.rollAbility = rollAbility;
+  CONFIG.Actor.entityClass.prototype.rollAbilitySave = rollAbilitySave;
+  CONFIG.Actor.entityClass.prototype.rollAbilityTest = rollAbilityTest;
   CONFIG.Actor.entityClass.prototype.rollCheck = rollCheck;
+  CONFIG.Actor.entityClass.prototype.rollSkill = rollSkill;
 };
 
 export const overrideActorSheet = () => {
   Object.values(CONFIG.Actor.sheetClasses).forEach((type) => Object.values(type).forEach((sheet) => {
+    if (sheet.id.includes('dnd5e.ActorSheet5e')) {
+      sheet.cls.prototype.originalActivateListeners = sheet.cls.prototype.activateListeners;
+      sheet.cls.prototype.activateListeners = activateListeners;
+    }
     sheet.cls.prototype._onItemRoll = _onItemRoll;
     sheet.cls.prototype._onRollSkillCheck = _onRollSkillCheck;
     sheet.cls.prototype._onRollAbilityTest = _onRollAbilityTest;

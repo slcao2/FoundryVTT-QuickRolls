@@ -92,6 +92,18 @@
   line-height: 24px;
 }
 
+.sheet-body .attributes .ability-scores .ability-modifiers .ability-mod,
+.sheet-body .attributes .ability-scores .ability-modifiers .ability-save {
+  cursor: pointer;
+}
+
+.sheet-body .attributes .ability-scores .ability-modifiers .ability-mod:hover,
+.sheet-body .attributes .ability-scores .ability-modifiers .ability-save:hover {
+  color: #000;
+  text-shadow: 0 0 10px red;
+  cursor: pointer;
+}
+
 /* Damage Types */
 .qr-none-damage-type {
   color: #333333;
