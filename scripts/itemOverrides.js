@@ -8,7 +8,7 @@ import {
   AUTO_ROLL_DAMAGE_DM_ONLY, AUTO_ROLL_DAMAGE_ALL,
 } from './settings.js';
 import {
-  ownedOnlyByGM, hasVantageFromEvent, ATTACK, VANTAGE, DAMAGE, VERSATILE, FORMULA,
+  ownedOnlyByGM, hasVantageFromEvent, ATTACK, VANTAGE, DAMAGE, VERSATILE, FORMULA, getTargetActors,
 } from './utils/helpers.js';
 import { TEMPLATE_PATH_PREFIX } from './utils/templatePathPrefix.js';
 import { DEFAULT_RADIX } from './utils/utilities.js';
@@ -420,24 +420,17 @@ async function rollFormula({
   if (spellLevel) rollData.item.level = spellLevel;
 
   // Invoke the roll and submit it to chat
-  let formulaRoll = new Roll(rollData.item.formula, rollData);
-  if ((isNodeCritical($(message.data.content)) || event.altKey) && !event.ctrlKey) {
-    formulaRoll = calculateCrit({
-      parts: [rollData.item.formula], rollData, roll: formulaRoll, criticalMultiplier: 2, criticalBonusDice: 0,
-    });
-  }
+  const formulaRoll = rollArbitrary({
+    parts: [rollData.item.formula],
+    rollData,
+    isCritical: (isNodeCritical($(message.data.content)) || event.altKey) && !event.ctrlKey,
+  });
 
-  try {
-    formulaRoll = formulaRoll.roll();
-  } catch (err) {
-    error(err);
-    ui.notifications.error(`Dice roll evaluation failed: ${err.message}`);
-    formulaRoll = null;
-  }
+  const rollNode = await buildDamageRollHtmlNode({ rolls: [formulaRoll] });
 
   const headerKey = 'DND5E.OtherFormula';
   await updateButtonAndHeader({
-    contentNode: $(message.data.content), roll: formulaRoll, action, headerKey, message,
+    contentNode: $(message.data.content), roll: formulaRoll, rollHtmlNode: rollNode, action, headerKey, message,
   });
 
   return formulaRoll;
@@ -542,8 +535,31 @@ async function _onChatCardAction(event) {
   toggleAllDisabledButtonState({ messageId, isDisable: false });
 }
 
+function _onDamageApplyAction(event) {
+  event.preventDefault();
+  event.stopPropagation();
+
+  const button = event.currentTarget;
+  const card = button.closest('.dice-roll');
+  const partDamage = parseInt($(button).closest('.dice').find('.part-total').text(), DEFAULT_RADIX);
+  const totalDamage = parseInt($(card).find('.dice-total').text(), DEFAULT_RADIX);
+  const { damageMultiplier } = button.dataset;
+  const targetActors = getTargetActors() || [];
+
+  targetActors.forEach((actor) => {
+    actor.applyDamage(Number.isNaN(partDamage) ? totalDamage : partDamage, damageMultiplier);
+  });
+}
+
+function additionalChatListeners(html) {
+  html.on('click', '.qr-damage-apply-buttons .qr-damage-apply-button', this._onDamageApplyAction.bind(this));
+}
+
 export const overrideItem = () => {
   CONFIG.Item.entityClass._onChatCardAction = _onChatCardAction;
+  CONFIG.Item.entityClass._onDamageApplyAction = _onDamageApplyAction;
+  CONFIG.Item.entityClass.additionalChatListeners = additionalChatListeners;
+
   CONFIG.Item.entityClass.prototype.roll = roll;
   CONFIG.Item.entityClass.prototype.rollAttack = rollAttack;
   CONFIG.Item.entityClass.prototype.rollDamage = rollDamage;

@@ -70,7 +70,8 @@ const updateChatClass = ({ node, message, action }) => {
   }
 };
 
-export const buildDamageRollHtmlNode = async ({ rolls, types }) => {
+export const buildDamageRollHtmlNode = async ({ rolls, types = [] }) => {
+  const hasTypes = types.length > 0;
   const NONE = 'none';
   const typeIconMap = {
     none: 'ban',
@@ -95,8 +96,8 @@ export const buildDamageRollHtmlNode = async ({ rolls, types }) => {
     diceFormula: rolls.map((roll) => roll.formula).join(' + '),
     rolls: rolls.map((roll, index) => ({
       formula: roll.formula,
-      type: types[index] || NONE,
-      typeIcon: typeIconMap[types[index] || NONE],
+      type: hasTypes ? types[index] || NONE : '',
+      typeIcon: hasTypes ? typeIconMap[types[index] || NONE] : '',
       total: roll.total,
       roll: roll.dice.map((die) => die.results.map((r) => (
         {
@@ -109,7 +110,7 @@ export const buildDamageRollHtmlNode = async ({ rolls, types }) => {
       ))).flat(),
     })),
     total: rolls.reduce((acc, r) => acc + r.total, 0),
-    isDamage: true,
+    hasTypes,
   };
   const node = await renderTemplate(`${TEMPLATE_PATH_PREFIX}/dice-roll.html`, templateData);
   return $(node);

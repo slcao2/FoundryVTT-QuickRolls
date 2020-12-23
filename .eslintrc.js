@@ -34,6 +34,7 @@ module.exports = {
     duplicate: 'readonly',
     game: 'writable',
     getProperty: 'readonly',
+    Handlebars: 'readonly',
     Hooks: 'readonly',
     isObjectEmpty: 'readonly',
     loadTemplates: 'readonly',
