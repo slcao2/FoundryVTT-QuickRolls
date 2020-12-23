@@ -130,6 +130,7 @@
   margin: 0;
   padding: 0;
   font-size: 12px;
+  visibility: hidden;
 }
 
 .dice-total-text {
@@ -139,6 +140,10 @@
 .dice-total-buttons {
   margin-left: 35px;
   flex: none;
+}
+
+.dnd5e.chat-card:hover .qr-damage-apply-buttons {
+  visibility: initial;
 }
 
 /* Damage Types */
