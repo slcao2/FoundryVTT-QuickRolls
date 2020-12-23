@@ -393,7 +393,13 @@ async function rollDamage({
 
   const headerKey = (this.isHealing && 'DND5E.Healing') || (versatile && 'DND5E.Versatile') || 'DND5E.Damage';
   await updateButtonAndHeader({
-    contentNode: $(message.data.content), action, headerKey, message, rollHtmlNode: rollNode, roll: damageRolls,
+    contentNode: $(message.data.content),
+    action,
+    headerKey,
+    message,
+    rollHtmlNode: rollNode,
+    roll: damageRolls,
+    flags: { isCritical },
   });
 
   return damageRolls;
@@ -419,18 +425,25 @@ async function rollFormula({
   const rollData = this.getRollData();
   if (spellLevel) rollData.item.level = spellLevel;
 
+  const isCritical = (isNodeCritical($(message.data.content)) || event.altKey) && !event.ctrlKey;
   // Invoke the roll and submit it to chat
   const formulaRoll = rollArbitrary({
     parts: [rollData.item.formula],
     rollData,
-    isCritical: (isNodeCritical($(message.data.content)) || event.altKey) && !event.ctrlKey,
+    isCritical,
   });
 
   const rollNode = await buildDamageRollHtmlNode({ rolls: [formulaRoll] });
 
   const headerKey = 'DND5E.OtherFormula';
   await updateButtonAndHeader({
-    contentNode: $(message.data.content), roll: formulaRoll, rollHtmlNode: rollNode, action, headerKey, message,
+    contentNode: $(message.data.content),
+    roll: formulaRoll,
+    rollHtmlNode: rollNode,
+    action,
+    headerKey,
+    message,
+    flags: { isCritical },
   });
 
   return formulaRoll;
