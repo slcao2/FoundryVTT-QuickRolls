@@ -104,6 +104,43 @@
   cursor: pointer;
 }
 
+.dice-tooltip .dice-rolls {
+  margin: 0;
+  padding: 2px 0 5px 0;
+}
+
+.qr-damage-apply-button {
+  position: relative;
+  width: 20px;
+  line-height: 20px;
+  float: left;
+  background: rgba(0, 0, 0, 0.1);
+  color: #000;
+  font-weight: bold;
+  text-align: center;
+  border: 1px #999 solid;
+  border-radius: 10px;
+  margin: 0 1px;
+}
+
+.qr-damage-apply-buttons {
+  flex: none;
+  list-style: none;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  font-size: 12px;
+}
+
+.dice-total-text {
+  text-align: right;
+}
+
+.dice-total-buttons {
+  margin-left: 35px;
+  flex: none;
+}
+
 /* Damage Types */
 .qr-none-damage-type {
   color: #333333;

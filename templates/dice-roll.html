@@ -6,7 +6,7 @@
       <div class="dice">
         <header class="part-header flexrow">
           <span class="part-formula">{{this.formula}}</span>
-          {{#if ../isDamage}}
+          {{#if ../hasTypes}}
           <span class="part-type qr-{{this.type}}-damage-type">
             <i class="part-type-icon fas fa-{{this.typeIcon}}"></i>
             {{this.type}}
@@ -14,14 +14,20 @@
           {{/if}}
           <span class="part-total">{{this.total}}</span>
         </header>
-        <ol class="dice-rolls">
-          {{#each this.roll}}
-          <li class="roll die d{{this.diceSize}}{{#if this.isMin}} min{{/if}}{{#if this.isMax}} max{{/if}}{{#if this.isDiscarded}} discarded{{/if}}">{{this.result}}</li>
-          {{/each}}
-        </ol>
+        <div class="flexrow">
+          <ol class="dice-rolls">
+            {{#each this.roll}}
+            <li class="roll die d{{this.diceSize}}{{#if this.isMin}} min{{/if}}{{#if this.isMax}} max{{/if}}{{#if this.isDiscarded}} discarded{{/if}}">{{this.result}}</li>
+            {{/each}}
+          </ol>
+          {{> applyDamageButtons}}
+        </div>
       </div>
       {{/each}}
     </div>
-    <h4 class="dice-total">{{total}}</h4>
+    <h4 class="dice-total flexrow">
+      <div class="dice-total-text">{{total}}</div>
+      <div class="dice-total-buttons">{{> applyDamageButtons}}</div>
+    </h4>
   </div>
 </div>

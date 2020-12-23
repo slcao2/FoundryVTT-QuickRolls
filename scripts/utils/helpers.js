@@ -33,4 +33,16 @@ export const ownedOnlyByGM = (actor) => {
   return isOnlyGmOwned;
 };
 
+export const getTargetActors = () => {
+  const { character } = game.user;
+  const { controlled } = canvas.tokens;
+
+  if (controlled.length === 0) return [character] || null;
+  if (controlled.length > 0) {
+    const actors = controlled.map((c) => c.actor);
+    return actors;
+  }
+  throw new Error('You must designate a specific Token as the roll target');
+};
+
 export const hasVantageFromEvent = (event) => event && (event.altKey || event.ctrlKey || event.metaKey);
