@@ -34,7 +34,7 @@
     "name": "English",
     "path": "lang/en.json"
   }],
-  "manifest": "https://github.com/slcao2/FoundryVTT-QuickRolls/releases/latest/download/module.json",
+  "manifest": "https://raw.githubusercontent.com/slcao2/FoundryVTT-QuickRolls/main/module.json",
   "download": "https://github.com/slcao2/FoundryVTT-QuickRolls/releases/download/v1.4.1/module.zip",
   "bugs": "https://github.com/slcao2/FoundryVTT-QuickRolls/issues"
 }
