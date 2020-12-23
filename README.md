@@ -4,7 +4,6 @@ A module for quicker rolling in FoundryVTT. After using both BetterRolls5e and M
 ## Installation
 You can install this module in a couple different ways outlined below.
 
-
 ### Install through FoundryVTT Add-on Modules Tab (Recommended)
 * Go to the Add-on Modules tab.
 * Click Install Module.
