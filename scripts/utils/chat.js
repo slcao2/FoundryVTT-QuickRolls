@@ -1,7 +1,7 @@
 import { diceSoNiceShowForRoll } from './diceSoNiceHelpers.js';
 import { getRollTotal, nodeToHtml, replaceClassNode } from './domUtils.js';
 import {
-  ATTACK, DAMAGE, VANTAGE, VERSATILE,
+  ATTACK, DAMAGE, FORMULA, VANTAGE, VERSATILE,
 } from './helpers.js';
 import { debug } from './logger.js';
 import { TEMPLATE_PATH_PREFIX } from './templatePathPrefix.js';
@@ -23,6 +23,9 @@ const updateRollClass = ({
   switch (action) {
     case ATTACK:
     case VANTAGE:
+    case DAMAGE:
+    case VERSATILE:
+    case FORMULA:
       if (flags.isCritical) {
         rollNode.find('.dice-total').addClass('critical');
       } else if (flags.isFumble) {
@@ -130,7 +133,11 @@ export const updateButtonAndHeader = async ({
     rollHtmlNode = $(rollHtml);
   }
 
-  updateRollClass({ action, rollNode: rollHtmlNode, flags: { isCritical: roll?.isCritical, isFumble: roll?.isFumble } });
+  updateRollClass({
+    action,
+    rollNode: rollHtmlNode,
+    flags: { isCritical: roll?.isCritical || flags.isCritical, isFumble: roll?.isFumble },
+  });
   replaceClassNode({ node: contentNode, targetClass: `qr-${action}`, replacementNode: rollHtmlNode });
 
   const headerTemplateData = {

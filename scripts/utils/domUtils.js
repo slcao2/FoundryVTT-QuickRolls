@@ -17,6 +17,6 @@ export const toggleAllDisabledButtonState = ({
 export const nodeToHtml = (node) => node.prop('outerHTML');
 
 // eslint-disable-next-line max-len
-export const isNodeCritical = (node) => node.find('.dice-roll').not('.qr-discarded').find('.dice-total').filter('.critical').length > 0;
+export const isNodeCritical = (node) => node.find('.qr-attack, .qr-vantage').not('.qr-discarded').find('.dice-total').filter('.critical').length > 0;
 
 export const getRollTotal = (node) => node.find('.dice-total').prop('innerText');
