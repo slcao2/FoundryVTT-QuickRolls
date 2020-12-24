@@ -6,6 +6,7 @@
     </header>
 
     <div class="qr-card-check-buttons qr-card-buttons">
+        {{#if isDualRoll}}
         <div class="flexrow">
             <h4 class="qr-card-button-header qr-attack-header qr-hidden">
                 {{ localize "QR.Roll" }}
@@ -23,5 +24,14 @@
                 </div>
             </button>
         </div>
+        {{/if}}
+        {{#if isSingleRoll}}
+        <h4 class="qr-card-button-header qr-attack-header qr-hidden">
+            {{ localize "QR.Roll" }}
+        </h4>
+        <button class="qr-damage" data-action="damage">
+            {{ localize "QR.Roll" }}
+        </button>
+        {{/if}}
     </div>
 </div>

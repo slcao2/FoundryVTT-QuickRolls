@@ -1,10 +1,10 @@
 import { updateButtonAndHeader } from './utils/chat.js';
 import { toggleAllDisabledButtonState } from './utils/domUtils.js';
 import {
-  ABILITY, ATTACK, hasVantageFromEvent, SAVE, SKILL, VANTAGE,
+  ABILITY, ATTACK, DAMAGE, hasVantageFromEvent, SAVE, SKILL, VANTAGE,
 } from './utils/helpers.js';
 import { debug } from './utils/logger.js';
-import { rollD20 } from './utils/roll.js';
+import { rollArbitrary, rollD20 } from './utils/roll.js';
 import { TEMPLATE_PATH_PREFIX } from './utils/templatePathPrefix.js';
 
 // Import DND5E System files
@@ -169,6 +169,7 @@ async function displayCard({
     titleText: getTitle(id, type),
     checkId: id,
     checkType: type,
+    isDualRoll: true,
   };
 
   // Render the chat card template
@@ -347,6 +348,91 @@ async function rollCheck({
   return checkRoll;
 }
 
+/**
+ * Roll a hit die of the appropriate type, gaining hit points equal to the die roll plus your CON modifier
+ * @param {string} [denomination]   The hit denomination of hit die to roll. Example "d8".
+ *                                  If no denomination is provided, the first available HD will be used
+ * @param {boolean} [dialog]        Show a dialog prompt for configuring the hit die roll?
+ * @return {Promise<Roll|null>}     The created Roll instance, or null if no hit die was rolled
+ */
+async function rollHitDie(denomination, { dialog = true } = {}) {
+  // If no denomination was provided, choose the first available
+  let cls = null;
+  if (!denomination) {
+    cls = this.itemTypes.class.find((c) => c.data.data.hitDiceUsed < c.data.data.levels);
+    if (!cls) return null;
+    denomination = cls.data.data.hitDice;
+  }
+
+  // Otherwise locate a class (if any) which has an available hit die of the requested denomination
+  else {
+    cls = this.items.find((i) => {
+      const d = i.data.data;
+      return (d.hitDice === denomination) && ((d.hitDiceUsed || 0) < (d.levels || 1));
+    });
+  }
+
+  // If no class is available, display an error notification
+  if (!cls) {
+    ui.notifications.error(game.i18n.format('DND5E.HitDiceWarn', { name: this.name, formula: denomination }));
+    return null;
+  }
+
+  // Prepare roll data
+  const parts = [`1${denomination}`, '@abilities.con.mod'];
+  const rollData = duplicate(this.data.data);
+
+  // Call the roll helper utility
+  const roll = rollArbitrary({ parts, rollData, isCritical: false });
+  if (!roll) return null;
+
+  const { data, token } = this;
+  const hasDataToken = !!(data && data.token);
+  const templateData = {
+    actor: this,
+    tokenId: token ? `${token.scene._id}.${token.id}` : null,
+    img: hasDataToken ? data.token.img : this.img,
+    name: hasDataToken ? data.token.name : this.name,
+    titleText: 'Roll Hit Dice',
+    isSingleRoll: true,
+  };
+
+  // Render the chat card template
+  const template = `${TEMPLATE_PATH_PREFIX}/roll-card.html`;
+  const html = await renderTemplate(template, templateData);
+
+  // Create the ChatMessage data object
+  const chatData = {
+    user: game.user._id,
+    type: CONST.CHAT_MESSAGE_TYPES.OTHER,
+    content: html,
+    speaker: ChatMessage.getSpeaker({ actor: this, token }),
+    flags: { 'core.canPopout': true },
+  };
+
+  // Apply the roll mode to adjust message visibility
+  const rollMode = game.settings.get('core', 'rollMode');
+  ChatMessage.applyRollMode(chatData, rollMode);
+
+  // Create the chat message
+  const message = await ChatMessage.create(chatData, { rollMode });
+
+  toggleAllDisabledButtonState({ messageId: message.id, isDisable: true });
+  const headerKey = game.i18n.format('QR.Roll');
+  await updateButtonAndHeader({
+    contentNode: $(message.data.content), roll, action: DAMAGE, headerKey, message,
+  });
+  toggleAllDisabledButtonState({ messageId: message.id, isDisable: false });
+
+  // Adjust actor data
+  await cls.update({ 'data.hitDiceUsed': cls.data.data.hitDiceUsed + 1 });
+  const { hp } = this.data.data.attributes;
+  const dhp = Math.min(hp.max + (hp.tempmax ?? 0) - hp.value, roll.total);
+  await this.update({ 'data.attributes.hp.value': hp.value + dhp });
+
+  return roll;
+}
+
 function rollAbilityTest(ability, options = {}) {
   displayCard.bind(this)({
     event: options.event, createMessage: true, id: ability, type: ABILITY,
@@ -395,6 +481,7 @@ export const overrideActorEntity = () => {
   CONFIG.Actor.entityClass.prototype.rollAbilitySave = rollAbilitySave;
   CONFIG.Actor.entityClass.prototype.rollAbilityTest = rollAbilityTest;
   CONFIG.Actor.entityClass.prototype.rollCheck = rollCheck;
+  CONFIG.Actor.entityClass.prototype.rollHitDie = rollHitDie;
   CONFIG.Actor.entityClass.prototype.rollSkill = rollSkill;
 };
 
