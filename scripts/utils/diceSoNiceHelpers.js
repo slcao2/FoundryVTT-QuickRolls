@@ -1,8 +1,10 @@
 import { toggleAllDisabledButtonState } from './domUtils.js';
+import { debug } from './logger.js';
 import { sleep } from './utilities.js';
 
 export const DICE_SO_NICE = 'dice-so-nice';
 export const DICE_SO_NICE_IMMEDIATELY_DISPLAY_CHAT_MESSAGES = 'immediatelyDisplayChatMessages';
+export const DICE_SO_NICE_HIDE_NPC_ROLLS = 'hideNpcRolls';
 
 export const isDiceSoNiceEnabled = () => game.dice3d;
 
@@ -10,8 +12,12 @@ export const immediatelyDisplayChatMessages = () => game.settings.get(
   DICE_SO_NICE, DICE_SO_NICE_IMMEDIATELY_DISPLAY_CHAT_MESSAGES,
 );
 
-export const diceSoNiceShowForRoll = async ({ roll, messageId }) => {
-  if (isDiceSoNiceEnabled()) {
+export const hideNpcRolls = () => game.settings.get(
+  DICE_SO_NICE, DICE_SO_NICE_HIDE_NPC_ROLLS,
+);
+
+export const diceSoNiceShowForRoll = async ({ roll, messageId, isPC = true }) => {
+  if (isDiceSoNiceEnabled() && (isPC || !hideNpcRolls())) {
     const shouldImmediatelyDisplayChatMessage = immediatelyDisplayChatMessages();
     if (shouldImmediatelyDisplayChatMessage) {
       game.dice3d.showForRoll(roll);
