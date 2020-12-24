@@ -122,6 +122,7 @@ async function rollAttack({
   if (ammo && !isObjectEmpty(ammoUpdate) && !vantage && !isReroll) await ammo.update(ammoUpdate);
 
   const headerKey = (advantage > 0 && 'QR.Advantage') || (advantage < 0 && 'QR.Disadvantage') || 'DND5E.Attack';
+  htmlFlags.isPC = this.actor.isPC;
   await updateButtonAndHeader({
     contentNode: $(message.data.content), roll: attackRoll, action, headerKey, message, flags: htmlFlags,
   });
@@ -399,7 +400,7 @@ async function rollDamage({
     message,
     rollHtmlNode: rollNode,
     roll: damageRolls,
-    flags: { isCritical },
+    flags: { isCritical, isPC: this.actor.isPC },
   });
 
   return damageRolls;
@@ -443,7 +444,7 @@ async function rollFormula({
     action,
     headerKey,
     message,
-    flags: { isCritical },
+    flags: { isCritical, isPC: this.actor.isPC },
   });
 
   return formulaRoll;

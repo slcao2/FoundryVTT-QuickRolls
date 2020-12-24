@@ -339,6 +339,7 @@ async function rollCheck({
   if (checkRoll === false) return null;
 
   const headerKey = (advantage > 0 && 'QR.Advantage') || (advantage < 0 && 'QR.Disadvantage') || 'QR.Roll';
+  htmlFlags.isPC = this.isPC;
   await updateButtonAndHeader({
     contentNode: $(message.data.content), roll: checkRoll, action, headerKey, message, flags: htmlFlags,
   });
