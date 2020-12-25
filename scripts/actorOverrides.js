@@ -1,7 +1,7 @@
 import { updateButtonAndHeader } from './utils/chat.js';
 import { toggleAllDisabledButtonState } from './utils/domUtils.js';
 import {
-  ABILITY, ATTACK, DAMAGE, hasVantageFromEvent, SAVE, SKILL, VANTAGE,
+  ABILITY, ATTACK, DAMAGE, hasVantageFromEvent, isScrolledToBottom, SAVE, scrollToBottom, SKILL, VANTAGE,
 } from './utils/helpers.js';
 import { debug } from './utils/logger.js';
 import { rollArbitrary, rollD20 } from './utils/roll.js';
@@ -101,6 +101,7 @@ async function _onChatCardAction(event) {
   const { messageId } = card.closest('.message').dataset;
   const { checkId, checkType } = card.dataset;
 
+  const isChatLogScrolledToBottom = isScrolledToBottom();
   toggleAllDisabledButtonState({ messageId, isDisable: true });
 
   const message = game.messages.get(messageId);
@@ -129,6 +130,9 @@ async function _onChatCardAction(event) {
 
   // Re-enable the button
   toggleAllDisabledButtonState({ messageId, isDisable: false });
+  if (isChatLogScrolledToBottom) {
+    scrollToBottom();
+  }
 }
 
 function chatListeners(html) {
@@ -202,6 +206,7 @@ async function displayCard({
       });
     }
     toggleAllDisabledButtonState({ messageId: message.id, isDisable: false });
+    scrollToBottom();
 
     return message;
   }
@@ -423,6 +428,7 @@ async function rollHitDie(denomination, { dialog = true } = {}) {
     contentNode: $(message.data.content), roll, action: DAMAGE, headerKey, message,
   });
   toggleAllDisabledButtonState({ messageId: message.id, isDisable: false });
+  scrollToBottom();
 
   // Adjust actor data
   await cls.update({ 'data.hitDiceUsed': cls.data.data.hitDiceUsed + 1 });

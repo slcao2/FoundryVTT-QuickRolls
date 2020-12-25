@@ -1,3 +1,5 @@
+import { debug } from './logger.js';
+
 export const ATTACK = 'attack';
 export const VANTAGE = 'vantage';
 export const DAMAGE = 'damage';
@@ -43,6 +45,16 @@ export const getTargetActors = () => {
     return actors;
   }
   throw new Error('You must designate a specific Token as the roll target');
+};
+
+export const isScrolledToBottom = () => {
+  const chatLog = document.getElementById('chat-log');
+  return chatLog.scrollHeight - chatLog.scrollTop === chatLog.clientHeight;
+};
+
+export const scrollToBottom = () => {
+  const chatLog = document.getElementById('chat-log');
+  chatLog.scrollTop = chatLog.scrollHeight;
 };
 
 export const hasVantageFromEvent = (event) => event && (event.altKey || event.ctrlKey || event.metaKey);
