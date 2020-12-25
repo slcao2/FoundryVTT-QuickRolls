@@ -8,7 +8,7 @@ import {
   AUTO_ROLL_DAMAGE_DM_ONLY, AUTO_ROLL_DAMAGE_ALL,
 } from './settings.js';
 import {
-  ownedOnlyByGM, hasVantageFromEvent, ATTACK, VANTAGE, DAMAGE, VERSATILE, FORMULA, getTargetActors,
+  ownedOnlyByGM, hasVantageFromEvent, ATTACK, VANTAGE, DAMAGE, VERSATILE, FORMULA, getTargetActors, isScrolledToBottom, scrollToBottom,
 } from './utils/helpers.js';
 import { TEMPLATE_PATH_PREFIX } from './utils/templatePathPrefix.js';
 import { DEFAULT_RADIX } from './utils/utilities.js';
@@ -230,6 +230,7 @@ async function displayCard({
     }
 
     toggleAllDisabledButtonState({ messageId: message.id, isDisable: false });
+    scrollToBottom();
 
     return message;
   }
@@ -464,6 +465,7 @@ async function _onChatCardAction(event) {
   const card = button.closest('.chat-card');
   const { messageId } = card.closest('.message').dataset;
 
+  const isChatLogScrolledToBottom = isScrolledToBottom();
   toggleAllDisabledButtonState({ messageId, isDisable: true });
 
   const message = game.messages.get(messageId);
@@ -547,6 +549,9 @@ async function _onChatCardAction(event) {
 
   // Re-enable the button
   toggleAllDisabledButtonState({ messageId, isDisable: false });
+  if (isChatLogScrolledToBottom) {
+    scrollToBottom();
+  }
 }
 
 function _onDamageApplyAction(event) {
