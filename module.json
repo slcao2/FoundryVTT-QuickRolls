@@ -24,7 +24,8 @@
     "./scripts/utils/roll.js",
     "./scripts/utils/templatePathPrefix.js",
     "./scripts/utils/tidy5eHelpers.js",
-    "./scripts/utils/partials.js"
+    "./scripts/utils/partials.js",
+    "./scripts/utils/skillCustomizationHelpers.js"
   ],
   "styles": [
     "./styles/quick-rolls.css"

@@ -9,6 +9,8 @@ import { debug } from './utils/logger.js';
 import Actor5e from '../../../systems/dnd5e/module/actor/entity.js';
 import Item5e from '../../../systems/dnd5e/module/item/entity.js';
 
+CONFIG.debug.hooks = true;
+
 const preloadTemplates = () => {
   const templatePaths = [
     `${TEMPLATE_PATH_PREFIX}/item-card.html`,
