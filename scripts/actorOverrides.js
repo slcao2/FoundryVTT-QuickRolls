@@ -10,6 +10,7 @@ import { TEMPLATE_PATH_PREFIX } from './utils/templatePathPrefix.js';
 // Import DND5E System files
 import { DND5E } from '../../../systems/dnd5e/module/config.js';
 import { isTidy5eSheetActive } from './utils/tidy5eHelpers.js';
+import { getSkillCustomizationForSkill, isSkillCustomizationEnabled } from './utils/skillCustomizationHelpers.js';
 
 /**
  * Handle rolling of an item from the Actor sheet, obtaining the Item instance and dispatching to it's roll method
@@ -111,18 +112,27 @@ async function _onChatCardAction(event) {
   const actor = this._getChatCardActor(card);
   if (!actor) return;
 
+  const options = {};
+  // Handle Skill Customization module
+  if (checkType === SKILL && isSkillCustomizationEnabled() && getSkillCustomizationForSkill(actor, checkId)) {
+    options.parts = [];
+    options.parts.push('@extra');
+    options.data = {};
+    options.data.extra = getSkillCustomizationForSkill(actor, checkId);
+  }
+
   // Handle different actions
   switch (action) {
     case ATTACK:
     case `${ATTACK}-reroll`:
       await actor.rollCheck({
-        checkId, action: ATTACK, type: checkType, event, message,
+        checkId, action: ATTACK, type: checkType, event, message, options,
       });
       break;
     case VANTAGE:
     case `${VANTAGE}-reroll`:
       await actor.rollCheck({
-        checkId, action: VANTAGE, type: checkType, event, message, vantage: true,
+        checkId, action: VANTAGE, type: checkType, event, message, vantage: true, options,
       });
       break;
     default:
@@ -160,7 +170,7 @@ function getTitle(id, type) {
  *                                  the prepared message data (if false)
  */
 async function displayCard({
-  event = { altKey: false, ctrlKey: false, metaKey: false }, rollMode, createMessage = true, id, type,
+  event = { altKey: false, ctrlKey: false, metaKey: false }, rollMode, createMessage = true, id, type, options = {},
 } = {}) {
   // Basic template rendering data
   const { data, token } = this;
@@ -198,11 +208,11 @@ async function displayCard({
 
     toggleAllDisabledButtonState({ messageId: message.id, isDisable: true });
     await this.rollCheck.bind(this)({
-      checkId: id, action: ATTACK, type, event, message,
+      checkId: id, action: ATTACK, type, event, message, options,
     });
     if (hasVantageFromEvent(event)) {
       await this.rollCheck.bind(this)({
-        checkId: id, action: VANTAGE, type, event, message, vantage: true,
+        checkId: id, action: VANTAGE, type, event, message, vantage: true, options,
       });
     }
     toggleAllDisabledButtonState({ messageId: message.id, isDisable: false });
@@ -219,7 +229,9 @@ async function displayCard({
  * @param {object} data           Data to be modified
  * @param {object} rollFlags      Roll flags to be modified based on data
  */
-function buildSkillCheckParts({ checkId, data, rollFlags }) {
+function buildSkillCheckParts({
+  checkId, data, rollFlags,
+}) {
   const skill = this.data.data.skills[checkId];
   const bonuses = getProperty(this.data.data, 'bonuses.abilities') || {};
 
@@ -254,7 +266,9 @@ function buildSkillCheckParts({ checkId, data, rollFlags }) {
  * @param {object} data           Data to be modified
  * @param {object} rollFlags      Roll flags to be modified based on data
  */
-function buildAbilityCheckParts({ checkId, data, rollFlags }) {
+function buildAbilityCheckParts({
+  checkId, data, rollFlags,
+}) {
   const abl = this.data.data.abilities[checkId];
 
   // Construct parts
@@ -287,7 +301,9 @@ function buildAbilityCheckParts({ checkId, data, rollFlags }) {
  * @param {object} data           Data to be modified
  * @param {object} rollFlags      Roll flags to be modified based on data
  */
-function buildAbilitySaveParts({ checkId, data, rollFlags }) {
+function buildAbilitySaveParts({
+  checkId, data, rollFlags,
+}) {
   const abl = this.data.data.abilities[checkId];
 
   // Construct parts
@@ -311,7 +327,9 @@ function buildAbilitySaveParts({ checkId, data, rollFlags }) {
 }
 
 async function rollCheck({
-  checkId, action, type, event = { altKey: false, ctrlKey: false, metaKey: false }, message, vantage = false,
+  checkId, action, type,
+  event = { altKey: false, ctrlKey: false, metaKey: false },
+  message, vantage = false, options = {},
 }) {
   const rollFlags = {};
   const htmlFlags = {};
@@ -320,15 +338,31 @@ async function rollCheck({
 
   switch (type) {
     case ABILITY:
-      parts = buildAbilityCheckParts.bind(this)({ checkId, data, rollFlags });
+      parts = buildAbilityCheckParts.bind(this)({
+        checkId, data, rollFlags, options,
+      });
       break;
     case SAVE:
-      parts = buildAbilitySaveParts.bind(this)({ checkId, data, rollFlags });
+      parts = buildAbilitySaveParts.bind(this)({
+        checkId, data, rollFlags, options,
+      });
       break;
     case SKILL:
-      parts = buildSkillCheckParts.bind(this)({ checkId, data, rollFlags });
+      parts = buildSkillCheckParts.bind(this)({
+        checkId, data, rollFlags, options,
+      });
       break;
     default:
+  }
+
+  // Add provided extra roll parts
+  if (options.parts?.length > 0) {
+    parts.push(...options.parts);
+  }
+
+  // Add provided data associated with extra roll parts
+  if (options.data) {
+    mergeObject(data, options.data);
   }
 
   let advantage = 0;
@@ -441,19 +475,19 @@ async function rollHitDie(denomination, { dialog = true } = {}) {
 
 function rollAbilityTest(ability, options = {}) {
   displayCard.bind(this)({
-    event: options.event, createMessage: true, id: ability, type: ABILITY,
+    event: options.event, createMessage: true, id: ability, type: ABILITY, options,
   });
 }
 
 function rollAbilitySave(ability, options = {}) {
   displayCard.bind(this)({
-    event: options.event, createMessage: true, id: ability, type: SAVE,
+    event: options.event, createMessage: true, id: ability, type: SAVE, options,
   });
 }
 
 function rollSkill(skill, options = {}) {
   displayCard.bind(this)({
-    event: options.event, createMessage: true, id: skill, type: SKILL,
+    event: options.event, createMessage: true, id: skill, type: SKILL, options,
   });
 }
 
