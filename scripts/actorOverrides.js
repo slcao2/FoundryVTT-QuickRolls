@@ -9,8 +9,8 @@ import { TEMPLATE_PATH_PREFIX } from './utils/templatePathPrefix.js';
 
 // Import DND5E System files
 import { DND5E } from '../../../systems/dnd5e/module/config.js';
-import { isTidy5eSheetActive } from './utils/tidy5eHelpers.js';
-import { getSkillCustomizationForSkill, isSkillCustomizationEnabled } from './utils/skillCustomizationHelpers.js';
+import { isTidy5eSheetActive } from './moduleHelpers/tidy5eHelpers.js';
+import { getSkillCustomizationForSkill, isSkillCustomizationEnabled } from './moduleHelpers/skillCustomizationHelpers.js';
 
 /**
  * Handle rolling of an item from the Actor sheet, obtaining the Item instance and dispatching to it's roll method

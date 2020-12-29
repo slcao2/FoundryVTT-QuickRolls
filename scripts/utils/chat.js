@@ -1,4 +1,4 @@
-import { diceSoNiceShowForRoll } from './diceSoNiceHelpers.js';
+import { diceSoNiceShowForRoll } from '../moduleHelpers/diceSoNiceHelpers.js';
 import { getRollTotal, nodeToHtml, replaceClassNode } from './domUtils.js';
 import {
   ATTACK, DAMAGE, FORMULA, VANTAGE, VERSATILE,

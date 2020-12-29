@@ -19,13 +19,13 @@
     "./scripts/utils/chat.js",
     "./scripts/utils/helpers.js",
     "./scripts/utils/utilities.js",
-    "./scripts/utils/diceSoNiceHelpers.js",
     "./scripts/utils/domUtils.js",
     "./scripts/utils/roll.js",
     "./scripts/utils/templatePathPrefix.js",
-    "./scripts/utils/tidy5eHelpers.js",
     "./scripts/utils/partials.js",
-    "./scripts/utils/skillCustomizationHelpers.js"
+    "./scripts/moduleHelpers/diceSoNiceHelpers.js",
+    "./scripts/moduleHelpers/tidy5eHelpers.js",
+    "./scripts/moduleHelpers/skillCustomizationHelpers.js"
   ],
   "styles": [
     "./styles/quick-rolls.css"

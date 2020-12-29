@@ -1,7 +1,7 @@
-import { toggleAllDisabledButtonState } from './domUtils.js';
-import { getWhisperData } from './helpers.js';
-import { debug } from './logger.js';
-import { sleep } from './utilities.js';
+import { toggleAllDisabledButtonState } from '../utils/domUtils.js';
+import { getWhisperData } from '../utils/helpers.js';
+import { debug } from '../utils/logger.js';
+import { sleep } from '../utils/utilities.js';
 
 export const DICE_SO_NICE = 'dice-so-nice';
 export const DICE_SO_NICE_IMMEDIATELY_DISPLAY_CHAT_MESSAGES = 'immediatelyDisplayChatMessages';
