@@ -1,4 +1,5 @@
 import { toggleAllDisabledButtonState } from './domUtils.js';
+import { getWhisperData } from './helpers.js';
 import { debug } from './logger.js';
 import { sleep } from './utilities.js';
 
@@ -20,7 +21,8 @@ export const diceSoNiceShowForRoll = async ({ roll, messageId, isPC = true }) =>
   if (isDiceSoNiceEnabled() && (isPC || !hideNpcRolls())) {
     const shouldImmediatelyDisplayChatMessage = immediatelyDisplayChatMessages();
     if (shouldImmediatelyDisplayChatMessage) {
-      game.dice3d.showForRoll(roll);
+      const whisperData = getWhisperData();
+      game.dice3d.showForRoll(roll, game.user, true, whisperData.whisper, whisperData.blind);
     } else {
       // needed to disabled the buttons properly
       // https://stackoverflow.com/questions/779379/why-is-settimeoutfn-0-sometimes-useful
