@@ -23,6 +23,19 @@ const getGMUsers = () => {
   return gmUsers;
 };
 
+export const getWhisperData = () => {
+  let rollMode = null;
+  let whisper;
+  let blind = null;
+
+  rollMode = game.settings.get('core', 'rollMode');
+  if (['gmroll', 'blindroll'].includes(rollMode)) whisper = ChatMessage.getWhisperRecipients('GM');
+  if (rollMode === 'blindroll' && !getGMUsers().includes(game.user._id)) blind = true;
+  else if (rollMode === 'selfroll') whisper = [game.user._id];
+
+  return { rollMode, whisper, blind };
+};
+
 export const ownedOnlyByGM = (actor) => {
   const { permission } = actor.data;
   const gmUsers = getGMUsers();
