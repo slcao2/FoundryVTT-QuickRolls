@@ -20,15 +20,15 @@ export const hideNpcRolls = () => game.settings.get(
 export const diceSoNiceShowForRoll = async ({ roll, messageId, isPC = true }) => {
   if (isDiceSoNiceEnabled() && (isPC || !hideNpcRolls())) {
     const shouldImmediatelyDisplayChatMessage = immediatelyDisplayChatMessages();
+    const whisperData = getWhisperData();
     if (shouldImmediatelyDisplayChatMessage) {
-      const whisperData = getWhisperData();
       game.dice3d.showForRoll(roll, game.user, true, whisperData.whisper, whisperData.blind);
     } else {
       // needed to disabled the buttons properly
       // https://stackoverflow.com/questions/779379/why-is-settimeoutfn-0-sometimes-useful
       await sleep(0);
       toggleAllDisabledButtonState({ messageId, isDisable: true });
-      await game.dice3d.showForRoll(roll);
+      await game.dice3d.showForRoll(roll, game.user, true, whisperData.whisper, whisperData.blind);
       toggleAllDisabledButtonState({ messageId, isDisable: false });
     }
   }
