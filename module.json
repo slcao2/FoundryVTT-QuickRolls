@@ -4,7 +4,7 @@
   "description": "A module for quicker rolling in FoundryVTT.",
   "author": "Steven Cao",
   "version": "1.5.4",
-  "system": ["dnd5e"],
+  "systems": ["dnd5e"],
   "minimumCoreVersion": "0.7.5",
   "compatibleCoreVersion": "0.7.9",
   "url": "https://github.com/slcao2/FoundryVTT-QuickRolls",
