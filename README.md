@@ -1,3 +1,6 @@
+# DEPRECATED
+I have since moved on from maintaining this module. [Better Rolls](https://github.com/RedReign/FoundryVTT-BetterRolls5e) has since updated to include mostly everything that I would have wanted myself. Feel free to fork this repo and modify as you wish. 
+
 # FoundryVTT-QuickRolls
 A module for quicker rolling in FoundryVTT. After using both BetterRolls5e and Midi-QOL, I found some things that I liked about both but were not at the time available in either so I create my own module to get the rolling experience I wanted. Feel free to submit any bugs you find or features you'd like to see and I'll try to address them but no guarantees on whether they will be addressed in a timely manner or at all.
 
