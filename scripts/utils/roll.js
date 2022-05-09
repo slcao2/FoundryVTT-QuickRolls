@@ -44,9 +44,9 @@ export const rollD20 = ({
       d.options.fumble = flags.fumble;
     }
     d.results.forEach((r) => {
-      if (r.active && d.options.critical === r.result) {
+      if (r.active && d.options.critical <= r.result) {
         roll.isCritical = true;
-      } else if (r.active && d.options.fumble === r.result) {
+      } else if (r.active && d.options.fumble >= r.result) {
         roll.isFumble = true;
       }
     });
